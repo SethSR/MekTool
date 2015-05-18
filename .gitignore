@@ -1,5 +1,6 @@
 # Ignore build files
 bin/
+*.sublime-workspace
 
 # Windows image file caches
 Thumbs.db
