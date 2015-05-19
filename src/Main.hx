@@ -1,15 +1,13 @@
-import luxe.Input;
+import snow.api.Debug.*;
+import snow.types.Types;
 
-class Main extends luxe.Game {
+class Main extends snow.App {
+    override function config(config: AppConfig) {
+        config.window.title = 'my_app - a guide example';
+        return config;
+    } //config
+
     override function ready() {
+        log('ready');
     } //ready
-
-    override function onkeyup( e:KeyEvent ) {
-        if(e.keycode == Key.escape) {
-            Luxe.shutdown();
-        }
-    } //onkeyup
-
-    override function update(dt:Float) {
-    } //update
 } //Main
