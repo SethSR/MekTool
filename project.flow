@@ -1,18 +1,19 @@
 {
 
   project : {
-    name : 'empty',
+    name : 'MekTool',
     version : '1.0.0',
     author : 'luxeengine',
 
     app : {
-      name : 'luxe_empty',
-      package : 'com.luxeengine.empty'
+      name : 'MekTool',
+      package : 'com.darkstar.mtz'
     },
 
     build : {
       dependencies : {
         snow : '*',
+        Parsex : '*',
       }
     },
 
