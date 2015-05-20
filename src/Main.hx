@@ -3,11 +3,11 @@ import snow.types.Types;
 
 class Main extends snow.App {
     override function config(config: AppConfig) {
-        config.window.title = 'my_app - a guide example';
+        config.window.title = 'MekTool - Mekton Zeta';
         return config;
     } //config
 
     override function ready() {
-        var char_set_parser = new parser.CharSetParser('c');
+    	MekParser.test();
     } //ready
 } //Main
