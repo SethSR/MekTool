@@ -8,6 +8,6 @@ class Main extends snow.App {
     } //config
 
     override function ready() {
-        log('ready');
+        var char_set_parser = new parser.CharSetParser('c');
     } //ready
 } //Main

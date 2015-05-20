@@ -2,18 +2,20 @@
 	"folders":
 	[
 		{
-			"folder_exclude_patterns": [
-				"bin",
-			],
-			"file_exclude_patterns": [
+			"file_exclude_patterns":
+			[
 				".gitattributes",
-				".gitignore",
+				".gitignore"
 			],
-			"path": ".",
+			"folder_exclude_patterns":
+			[
+				"bin"
+			],
+			"path": "."
 		}
 	],
 	"settings":
 	{
-		"tab_size": 2,
-	},
+		"tab_size": 2
+	}
 }
