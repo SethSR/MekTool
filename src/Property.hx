@@ -7,13 +7,13 @@ enum Property {
 	Shots(n: Int) //           extends BeamProperty { override val toString = s"$n Shots" }
 	WarmUp(n: Int) //          extends BeamProperty { override val toString = s"$n Warm-Up" }
 	WideAngle(n: Int) //       extends BeamProperty { override val toString = s"$n Wide Angle" }
-	AntiMissile(b: Boolean) // extends BeamProperty { override val toString = if (b) "Variable " else "" + "Anti-Missile" }
+	AntiMissile(b: Bool) // extends BeamProperty { override val toString = if (b) "Variable " else "" + "Anti-Missile" }
 
 	/** Energy Melee properties **/
 	Hyper; //                  extends EnergyMeleeProperty { override val toString = "Hyper" }
 	Rechargeable; //           extends EnergyMeleeProperty { override val toString = "Rechargeable" }
 	AttackFactor(n: Int); //   extends EnergyMeleeProperty { override val toString = s"$n Attack Factor" }
-	BeamShield(b: Boolean); // extends EnergyMeleeProperty { override val toString = if (b) "Variable " else "" + "Beam Shield" }
+	BeamShield(b: Bool); // extends EnergyMeleeProperty { override val toString = if (b) "Variable " else "" + "Beam Shield" }
 
 	/** Melee properties **/
 	Clumsy; //    extends MeleeProperty { override val toString = "Clumsy" }
@@ -26,13 +26,13 @@ enum Property {
 	Fuse; //                       extends MissileProperty { override val toString = "Fuse" }
 	Scatter; //                    extends MissileProperty { override val toString = "Scatter" }
 	Smoke; //                      extends MissileProperty { override val toString = "Smoke" }
-	Countermissile(b: Boolean); // extends MissileProperty { override val toString = if (b) "Variable " else "" + "Countermissile" }
+	Countermissile(b: Bool); // extends MissileProperty { override val toString = if (b) "Variable " else "" + "Countermissile" }
 	Skill(n: Int); //              extends MissileProperty { override val toString = s"$n Skill" }
 	Smart(n: Int); //              extends MissileProperty { override val toString = s"$n Smart" }
 
 	/** Projectile properties **/
 	MultiFeed(n: Int); //               extends ProjectileProperty { override lazy val toString = s"$n Multi-Feed" }
-	Phalanx(value: Boolean); //         extends ProjectileProperty { override lazy val toString = if (value) "Variable " else "" + "Phalanx" }
+	Phalanx(value: Bool); //         extends ProjectileProperty { override lazy val toString = if (value) "Variable " else "" + "Phalanx" }
 	Ammo(system_list: List<MekSys>); // extends ProjectileProperty { override lazy val toString = "Ammo" + system_list.map("\n    " + _.toInternal).mkString }
 
 	/** Energy Pool properties **/
@@ -66,13 +66,13 @@ enum Property {
 	LongRange; //                 extends BeamProperty with MissileProperty with ProjectileProperty { override val toString = "Long Range" }
 	Range(n: Int); //             extends BeamProperty with MissileProperty with ProjectileProperty { override val toString = n + " Range" }
 	AllPurpose; //                extends BeamProperty with ProjectileProperty { override val toString = "All-Purpose" }
-	AntiPersonnel(b: Boolean); // extends BeamProperty with ProjectileProperty { override val toString = if (b) "Variable " else "" + "Anti-Personnel" }
+	AntiPersonnel(b: Bool); // extends BeamProperty with ProjectileProperty { override val toString = if (b) "Variable " else "" + "Anti-Personnel" }
 	BurstValue(n: Int); //        extends BeamProperty with ProjectileProperty { override val toString = s"$n Burst Value" }
 	Quick; //                     extends EnergyMeleeProperty with MeleeProperty { override val toString = "Quick" }
 	Thrown; //                    extends EnergyMeleeProperty with MeleeProperty { override val toString = "Thrown" }
 	TurnsInUse(n: Int); //        extends EnergyMeleeProperty with ShieldProperty { override val toString = n + " Turns in Use" }
 	ArmorPiercing; //             extends MeleeProperty with MissileProperty with AmmoTypeProperty { override val toString = "Armor-Piercing" }
-	Shock(b: Boolean); //         extends MeleeProperty with AmmoTypeProperty { override val toString = "Shock" + (if (b) " Only" else " Added") }
+	Shock(b: Bool); //         extends MeleeProperty with AmmoTypeProperty { override val toString = "Shock" + (if (b) " Only" else " Added") }
 	Hypervelocity; //             extends MissileProperty with ProjectileProperty { override val toString = "Hypervelocity" }
 	Foam; //                      extends AmmoTypeProperty with MissileProperty { override val toString = "Foam" }
 	Nuclear; //                   extends AmmoTypeProperty with MissileProperty { override val toString = "Nuclear" }
