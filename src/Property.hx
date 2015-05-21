@@ -1,3 +1,5 @@
+import AST;
+
 enum Property {
 	/** Beam properties **/
 	ClipFed; //              extends BeamProperty { override val toString = "Clip-Fed" }
@@ -54,7 +56,6 @@ enum Property {
 	/** Ammo Type properties **/
 	HighEx; //      extends AmmoTypeProperty { override val toString = "High-Explosive" }
 	Incendiary; //  extends AmmoTypeProperty { override val toString = "Incendiary" }
-	Kinetic; //     extends AmmoTypeProperty { override val toString = "Kinetic" }
 	Paintball; //   extends AmmoTypeProperty { override val toString = "Paintball" }
 	Scattershot; // extends AmmoTypeProperty { override val toString = "Scattershot" }
 	Tangler; //     extends AmmoTypeProperty { override val toString = "Tangler" }
@@ -79,9 +80,9 @@ enum Property {
 	Blast(n: Int); //             extends AmmoTypeProperty with MissileProperty { override val toString = "Blast " + n }
 
 	/** System properties **/
-	Cost(value: Double); //  extends SystemProperty { override val toString = value + " Cost" }
-	Space(value: Double); // extends SystemProperty { override val toString = value.toInt + " Space" }
-	Kills(value: Double); // extends SystemProperty { override val toString = value.toInt + " Kills" }
+	Cost(v: Float); //  extends SystemProperty { override val toString = value + " Cost" }
+	Space(v: Float); // extends SystemProperty { override val toString = value.toInt + " Space" }
+	Kills(v: Float); // extends SystemProperty { override val toString = value.toInt + " Kills" }
 
 	/** Misc. System properties **/
 	WireControlled; //         extends Property { override val toString = "Wire-Controlled" }
