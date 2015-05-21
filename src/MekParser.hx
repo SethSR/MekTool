@@ -13,24 +13,8 @@ using Armor;
 using Armor.ArmorClass;
 using SizeClass;
 using ServoType;
-
-interface AST {
-	function base(): Float;
-	function cost(): Float;
-	function space(): Float;
-	function kills(): Int;
-	function details(s: String, n: Int): String;
-}
-
-class MekSys implements AST {
-	function details(s: String, n: Int = 0) return '%-${comment_offset-n}s = (cost : %6.2f | space : %6.2f | kills : %3d)'.format(s,cost,space,kills);
-}
-
-enum Crew {
-	Cockpit;
-	Passenger;
-	ExtraCrew;
-}
+using OptionalSystem;
+using AST;
 
 class MekParser {
 	static function tryParse<T>(
@@ -56,6 +40,8 @@ class MekParser {
 			toOutput
 		);
 	}
+
+	static var parseMap = new Map();
 
 
 
@@ -132,10 +118,10 @@ class MekParser {
 		optionDeclP  ,
 	].ors().lazyF();
 
-	static var declarationP = identifierP.lazyF();
+	static var declarationP = identifierP.then(function (p) parseMap.set(p, null)).lazyF();
 
 	static var mountDeclP = [
-		mountT._and(mountSystemP).and(systemPropP.many()),
+		mountT._and(mountSystemP).and(systemPropP.many()).then(function (p) parseMap.set('Mount', Mount(Some(p.a)))),
 		mountT.and(emptyT).and_(systemPropP.many()),
 	].ors().lazyF();
 
@@ -146,32 +132,30 @@ class MekParser {
 	].ors().lazyF();
 
 	static var crewDeclP = [
-		cockpitT.then         (function (p) return Cockpit  ),
-		passengerT.then       (function (p) return Passenger),
-		extraT.and(crewT).then(function (p) return ExtraCrew),
+		cockpitT.then         (function (p) parseMap.set('Cockpit'  , Cockpit  )),
+		passengerT.then       (function (p) parseMap.set('Passenger', Passenger)),
+		extraT.and(crewT).then(function (p) parseMap.set('ExtraCrew', ExtraCrew)),
 	].ors().lazyF();
 
-	static var optionDeclP = optionTypeP.and(systemPropP.many());
-
-	static var optionTypeP = [
-		stereoT.then                            (function (p) return Stereo              ),
-		liftwireT.then                          (function (p) return Liftwire            ),
-		antiTheftT.and(codeT).and(lockT).then   (function (p) return AntiTheftCodeLock   ),
-		spotlightsT.then                        (function (p) return Spotlights          ),
-		nightlightsT.then                       (function (p) return Nightlights         ),
-		storageT.and(moduleT).then              (function (p) return StorageModule       ),
-		micromanipulatorsT.then                 (function (p) return Micromanipulators   ),
-		slickSprayT.then                        (function (p) return SlickSpray          ),
-		boggSprayT.then                         (function (p) return BoggSpray           ),
-		damageT.and(controlT).and(packageT).then(function (p) return DamageControlPackage),
-		quickT.and(changeT).and(mountT).then    (function (p) return QuickChangeMount    ),
-		silentT.and(runningT).then              (function (p) return SilentRunning       ),
-		parachuteT.then                         (function (p) return Parachute           ),
-		reEntryT.and(packageT).then             (function (p) return ReEntryPackage      ),
-		ejectionT.and(seatT).then               (function (p) return EjectionSeat        ),
-		escapeT.and(podT).then                  (function (p) return EscapePod           ),
-		maneuverT.and(podT).then                (function (p) return ManeuverPod         ),
-		vehicleT.and(podT).then                 (function (p) return VehiclePod          ),
+	static var optionDeclP = [
+		stereoT._and(systemPropP.many()).then                            (function (p) parseMap.set('Stereo',               Stereo              (p))),
+		liftwireT._and(systemPropP.many()).then                          (function (p) parseMap.set('Liftwire',             Liftwire            (p))),
+		antiTheftT.and(codeT).and(lockT)._and(systemPropP.many()).then   (function (p) parseMap.set('AntiTheftCodeLock',    AntiTheftCodeLock   (p))),
+		spotlightsT._and(systemPropP.many()).then                        (function (p) parseMap.set('Spotlights',           Spotlights          (p))),
+		nightlightsT._and(systemPropP.many()).then                       (function (p) parseMap.set('Nightlights',          Nightlights         (p))),
+		storageT.and(moduleT)._and(systemPropP.many()).then              (function (p) parseMap.set('StorageModule',        StorageModule       (p))),
+		micromanipulatorsT._and(systemPropP.many()).then                 (function (p) parseMap.set('Micromanipulators',    Micromanipulators   (p))),
+		slickSprayT._and(systemPropP.many()).then                        (function (p) parseMap.set('SlickSpray',           SlickSpray          (p))),
+		boggSprayT._and(systemPropP.many()).then                         (function (p) parseMap.set('BoggSpray',            BoggSpray           (p))),
+		damageT.and(controlT).and(packageT)._and(systemPropP.many()).then(function (p) parseMap.set('DamageControlPackage', DamageControlPackage(p))),
+		quickT.and(changeT).and(mountT)._and(systemPropP.many()).then    (function (p) parseMap.set('QuickChangeMount',     QuickChangeMount    (p))),
+		silentT.and(runningT)._and(systemPropP.many()).then              (function (p) parseMap.set('SilentRunning',        SilentRunning       (p))),
+		parachuteT._and(systemPropP.many()).then                         (function (p) parseMap.set('Parachute',            Parachute           (p))),
+		reEntryT.and(packageT)._and(systemPropP.many()).then             (function (p) parseMap.set('ReEntryPackage',       ReEntryPackage      (p))),
+		ejectionT.and(seatT)._and(systemPropP.many()).then               (function (p) parseMap.set('EjectionSeat',         EjectionSeat        (p))),
+		escapeT.and(podT)._and(systemPropP.many()).then                  (function (p) parseMap.set('EscapePod',            EscapePod           (p))),
+		maneuverT.and(podT)._and(systemPropP.many()).then                (function (p) parseMap.set('ManeuverPod',          ManeuverPod         (p))),
+		vehicleT.and(podT)._and(systemPropP.many()).then                 (function (p) parseMap.set('VehiclePod',           VehiclePod          (p))),
 	].ors().lazyF();
 
 	static var systemPropP = [
