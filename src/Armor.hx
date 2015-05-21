@@ -15,7 +15,7 @@ enum ArmorType {
 	RAMArmor;
 }
 
-class Armor implements AST {
+class Armor {
 	var armor_type: ArmorType;
 	var size_class: SizeClass;
 	var armor_class: ArmorClass;
@@ -49,6 +49,6 @@ class Armor implements AST {
   var toString =
     details('$size_class $armor_class $armor_type' +
     (if (armor_type == RAMArmor) ' $ram_value_1/$ram_value_2' else ''), 4);
-    
+
   function details(s: String, n: Int = 0) return '${comment_offset-n}s = (cost : %6.2f | SP    : %6.2f | DC    : %3d)'.format(s,cost,stopping_power,damage_coefficient);
 }
