@@ -1,13 +1,13 @@
 enum Property {
 	/** Beam properties **/
-	ClipFed; //                extends BeamProperty { override val toString = "Clip-Fed" }
-	Fragile; //                extends BeamProperty { override val toString = "Fragile" }
-	Hydro; //                  extends BeamProperty { override val toString = "Hydro" }
-	MegaBeam; //               extends BeamProperty { override val toString = "Mega-Beam" }
-	Shots(n: Int) //           extends BeamProperty { override val toString = s"$n Shots" }
-	WarmUp(n: Int) //          extends BeamProperty { override val toString = s"$n Warm-Up" }
-	WideAngle(n: Int) //       extends BeamProperty { override val toString = s"$n Wide Angle" }
-	AntiMissile(b: Bool) // extends BeamProperty { override val toString = if (b) "Variable " else "" + "Anti-Missile" }
+	ClipFed; //              extends BeamProperty { override val toString = "Clip-Fed" }
+	Fragile; //              extends BeamProperty { override val toString = "Fragile" }
+	Hydro; //                extends BeamProperty { override val toString = "Hydro" }
+	MegaBeam; //             extends BeamProperty { override val toString = "Mega-Beam" }
+	Shots(n: Int); //        extends BeamProperty { override val toString = s"$n Shots" }
+	WarmUp(n: Int); //       extends BeamProperty { override val toString = s"$n Warm-Up" }
+	WideAngle(n: Int); //    extends BeamProperty { override val toString = s"$n Wide Angle" }
+	AntiMissile(b: Bool); // extends BeamProperty { override val toString = if (b) "Variable " else "" + "Anti-Missile" }
 
 	/** Energy Melee properties **/
 	Hyper; //                  extends EnergyMeleeProperty { override val toString = "Hyper" }
