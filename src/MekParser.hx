@@ -9,7 +9,22 @@ import com.mindrocks.functional.Functional;
 
 import MekTokens.*;
 
-class MekSys {}
+using Armor;
+using Armor.ArmorClass;
+using SizeClass;
+using ServoType;
+
+interface AST {
+	function base(): Float;
+	function cost(): Float;
+	function space(): Float;
+	function kills(): Int;
+	function details(s: String, n: Int): String;
+}
+
+class MekSys implements AST {
+	function details(s: String, n: Int = 0) return '%-${comment_offset-n}s = (cost : %6.2f | space : %6.2f | kills : %3d)'.format(s,cost,space,kills);
+}
 
 enum Crew {
 	Cockpit;
@@ -96,16 +111,16 @@ class MekParser {
 	].ors().lazyF();
 
 	static var armorP = [
-		sizeClassP.and(armorClassP.option()).and_(armorT).then(function (p) return StandardArmor(p.a, p.b)),
-		sizeClassP.and(armorClassP.option()).and(ramT._and(slashT._and(numberP))).then(function (p) return RAMArmor(p.a.a, p.a.b, Std.parseInt(p.b))),
+		sizeClassP.and(armorClassP.option()).and_(armorT).then                                     (function (p) return new Armor(StandardArmor, p.a  , switch (p.b)   { case Some(ac): ac; case None: Standard(1.00, 1); })),
+		sizeClassP.and(armorClassP.option()).and(ramT._and(numberP.and(slashT._and(numberP)))).then(function (p) return new Armor(RAMArmor,      p.a.a, switch (p.a.b) { case Some(ac): ac; case None: Standard(1.00, 1); }, Std.parseInt(p.b.a), Std.parseInt(p.b.b))),
 	].ors().lazyF();
 
 	static var armorClassP = [
-		ablativeT.then(function (p) return Ablative),
-		standardT.then(function (p) return Standard),
-		alphaT.then   (function (p) return Alpha   ),
-		betaT.then    (function (p) return Beta    ),
-		gammaT.then   (function (p) return Gamma   ),
+		ablativeT.then(function (p) return Ablative(0.50, 0)),
+		standardT.then(function (p) return Standard(1.00, 1)),
+		alphaT.then   (function (p) return Alpha   (1.25, 2)),
+		betaT.then    (function (p) return Beta    (1.50, 4)),
+		gammaT.then   (function (p) return Gamma   (2.00, 8)),
 	].ors().lazyF();
 
 	static var systemDeclP = [
@@ -121,7 +136,7 @@ class MekParser {
 
 	static var mountDeclP = [
 		mountT._and(mountSystemP).and(systemPropP.many()),
-		mountT.and(emptyT).and_( systemPropP.many()),
+		mountT.and(emptyT).and_(systemPropP.many()),
 	].ors().lazyF();
 
 	static var mountSystemP = [
@@ -165,9 +180,7 @@ class MekParser {
 		killsPropP,
 	].ors().lazyF();
 
-	static var costPropP = numberP.and_(costT).then(function (p) return Property.Cost(Std.parseFloat(p)));
-
-	static var spacePropP = numberP.and_(spaceT).then(function (p) return Property.Space(Std.parseInt(p)));
-
-	static var killsPropP = numberP.and_(killsT).then(function (p) return Property.Kills(Std.parseInt(p)));
+	static var costPropP  = numberP.and_(costT ).then(function (p) return Property.Cost (Std.parseFloat(p)));
+	static var spacePropP = numberP.and_(spaceT).then(function (p) return Property.Space(Std.parseInt  (p)));
+	static var killsPropP = numberP.and_(killsT).then(function (p) return Property.Kills(Std.parseInt  (p)));
 }
