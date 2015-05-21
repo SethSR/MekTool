@@ -17,27 +17,6 @@ enum Crew {
 	ExtraCrew;
 }
 
-enum OptionType {
-	Stereo;
-	Liftwire;
-	AntiTheftCodeLock;
-	Spotlights;
-	Nightlights;
-	StorageModule;
-	Micromanipulators;
-	SlickSpray;
-	BoggSpray;
-	DamageControlPackage;
-	QuickChangeMount;
-	SilentRunning;
-	Parachute;
-	ReEntryPackage;
-	EjectionSeat;
-	EscapePod;
-	ManeuverPod;
-	VehiclePod;
-}
-
 class MekParser {
 	static function tryParse<T>(
 		str       : String,
