@@ -91,6 +91,7 @@ class MekTokens {
 	static public var hydroT             = withSpacing('Hydro'.identifier());
 	static public var hyperT             = withSpacing('Hyper'.identifier());
 	static public var hypervelocityT     = withSpacing('Hypervelocity'.identifier());
+	static public var inT                = withSpacing('In'.identifier());
 	static public var incendiaryT        = withSpacing('Incendiary'.identifier());
 	static public var infinityT          = withSpacing('Infinity'.identifier());
 	static public var intensifiersT      = withSpacing('Intensifiers'.identifier());
@@ -188,6 +189,7 @@ class MekTokens {
 	static public var torsoT             = withSpacing('Torso'.identifier());
 	static public var tracerT            = withSpacing('Tracer'.identifier());
 	static public var turnsT             = withSpacing('Turns'.identifier());
+	static public var useT               = withSpacing('Use'.identifier());
 	static public var valueT             = withSpacing('Value'.identifier());
 	static public var variableT          = withSpacing('Variable'.identifier());
 	static public var vehicleT           = withSpacing('Vehicle'.identifier());
