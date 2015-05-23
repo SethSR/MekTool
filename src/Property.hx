@@ -43,7 +43,7 @@ enum Property {
 	/** Projectile properties **/
 	MultiFeed(n: Int); //               = s"$n Multi-Feed"
 	Phalanx(value: Bool); //            = if (value) "Variable " else "" + "Phalanx"
-	Ammo(system_list: List<MekSys>); // = "Ammo" + system_list.map("\n    " + _.toInternal).mkString
+	Ammo(system_list: Array<Int>); // = "Ammo" + system_list.map("\n    " + _.toInternal).mkString
 
 	/** Energy Pool properties **/
 	Morphable; //     = "Morphable"
