@@ -1,6 +1,4 @@
-import com.mindrocks.text.Parser;
 using com.mindrocks.text.Parser;
-
 using com.mindrocks.macros.LazyMacro;
 
 class MekTokens {
@@ -66,8 +64,8 @@ class MekTokens {
 	static public var damageT            = withSpacing('Damage'.identifier());
 	static public var defenseT           = withSpacing('Defense'.identifier());
 	static public var disruptorT         = withSpacing('Disruptor'.identifier());
-	static public var eCCMT              = withSpacing('ECCM'.identifier());
-	static public var eCMT               = withSpacing('ECM'.identifier());
+	static public var eccmT              = withSpacing('ECCM'.identifier());
+	static public var ecmT               = withSpacing('ECM'.identifier());
 	static public var ejectionT          = withSpacing('Ejection'.identifier());
 	static public var emptyT             = withSpacing('Empty'.identifier());
 	static public var enclosingT         = withSpacing('Enclosing'.identifier());
