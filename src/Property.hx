@@ -1,6 +1,11 @@
 import AST;
 
 enum Property {
+	/** System properties **/
+	Cost(v: Float); //  extends SystemProperty { override val toString = value + " Cost" }
+	Space(v: Float); // extends SystemProperty { override val toString = value.toInt + " Space" }
+	Kills(v: Float); // extends SystemProperty { override val toString = value.toInt + " Kills" }
+
 	/** Beam properties **/
 	ClipFed; //              extends BeamProperty { override val toString = "Clip-Fed" }
 	Fragile; //              extends BeamProperty { override val toString = "Fragile" }
@@ -78,11 +83,6 @@ enum Property {
 	Foam; //                      extends AmmoTypeProperty with MissileProperty { override val toString = "Foam" }
 	Nuclear; //                   extends AmmoTypeProperty with MissileProperty { override val toString = "Nuclear" }
 	Blast(n: Int); //             extends AmmoTypeProperty with MissileProperty { override val toString = "Blast " + n }
-
-	/** System properties **/
-	Cost(v: Float); //  extends SystemProperty { override val toString = value + " Cost" }
-	Space(v: Float); // extends SystemProperty { override val toString = value.toInt + " Space" }
-	Kills(v: Float); // extends SystemProperty { override val toString = value.toInt + " Kills" }
 
 	/** Misc. System properties **/
 	WireControlled; //         extends Property { override val toString = "Wire-Controlled" }
