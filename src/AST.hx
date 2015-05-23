@@ -1,12 +1,11 @@
 import com.mindrocks.functional.Functional;
 
 class AST {
-	function base(): Float;
-	function cost(): Float;
-	function space(): Float;
-	function kills(): Int;
-	function details(s: String, n: Int = 0)
-		return '%-${comment_offset-n}s = (cost : %6.2f | space : %6.2f | kills : %3d)'.format(s,cost,space,kills);
+	function base(): Float { return 0; }
+	function cost(): Float { return 0; }
+	function space(): Float { return 0; }
+	function kills(): Int { return 0; }
+	// function details(s: String, n: Int = 0) return '%-${39-n}s = (cost : %6.2f | space : %6.2f | kills : %3d)'.format(s,cost,space,kills);
 }
 
 enum MekSys {
