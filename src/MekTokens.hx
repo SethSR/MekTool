@@ -15,7 +15,7 @@ class MekTokens {
 	}
 
 	static var identifierR = ~/[a-zA-Z0-9_-]+/;
-	static var numberR     = ~/[-]*[0-9]+/;
+	static var numberR     = ~/[-+]?([0-9]+)?\.?[0-9]+/;
 
 	static public var identifierP = withSpacing(identifierR.regexParser()).tag('identifier').lazyF();
 	static public var numberP     = withSpacing(numberR.regexParser()).tag('number').lazyF();
