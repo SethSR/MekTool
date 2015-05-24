@@ -90,7 +90,7 @@ class MekParser {
 		systemDefP,
 	].ors().lazyF();
 
-	static var mektonDefP = mektonT._and(nameDeclP).band(servoP.many()).then(function (p) resolved_mektons.push(new Mekton(p.a, p.b))).lazyF();
+	static var mektonDefP = mektonT._and(nameDeclP).band(servoP.many()).then(function (p) resolved_mektons.push({ name: p.a, servos: p.b })).lazyF();
 
 	static var servoP = [
 		sizeClassP.band(torsoT._and(armorP.band(systemDeclP.many()))).then(function (p) return Torso(p.a, p.b.a, p.b.b)),
