@@ -2,7 +2,7 @@ import com.mindrocks.functional.Functional.Option;
 
 typedef Mekton = {
 	name: String,
-	servoList: List<Servo>,
+	servos: Array<Servo>,
 }
 
 enum MekSys {
