@@ -1,8 +1,7 @@
 {
-
   project : {
     name : 'MekTool',
-    version : '1.0.0',
+    version : '0.1.0',
     author : 'luxeengine',
 
     app : {
@@ -20,7 +19,5 @@
     files : {
       assets : 'assets/'
     }
-
   }
-
 }
