@@ -65,12 +65,12 @@ enum MekSys {
 	ExtraCrew;
 
 	/** Recon Systems **/
-	AdvancedSensorPackage;
-	RadioRadarAnalyzer;
-	ResolutionIntensifiers;
-	SpottingRadar;
-	TargetAnalyzer;
-	MarineSuite;
-	GravityLens;
-	MagneticResonance;
+	AdvancedSensorPackage (properties: Array<Property>);
+	RadioRadarAnalyzer    (properties: Array<Property>);
+	ResolutionIntensifiers(properties: Array<Property>);
+	SpottingRadar         (properties: Array<Property>);
+	TargetAnalyzer        (properties: Array<Property>);
+	MarineSuite           (properties: Array<Property>);
+	GravityLens           (properties: Array<Property>);
+	MagneticResonance     (properties: Array<Property>);
 }
