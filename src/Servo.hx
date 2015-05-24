@@ -7,13 +7,3 @@ enum Servo {
 	Tail (sizeClass: SizeClass, armor: Armor, systemList: List<MekSys>);
 	Pod  (sizeClass: SizeClass, armor: Armor, systemList: List<MekSys>);
 }
-
-enum ServoType {
-	Torso;
-	Head;
-	Arm;
-	Leg;
-	Tail;
-	Wing;
-	Pod;
-}
