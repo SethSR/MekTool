@@ -4,18 +4,24 @@ using com.mindrocks.macros.LazyMacro;
 class MekTokens {
 	static var spaceP = ' '.identifier().lazyF();
 	static var tabP   = '\t'.identifier().lazyF();
+	static var retP   = '\r'.identifier().lazyF();
+	static var nlnP   = '\n'.identifier().lazyF();
+
+	static var identifierR = ~/[a-zA-Z0-9 _-]+/;
+	static var numberR     = ~/[-+]?[0-9]*\.?[0-9]+/;
+	static var commentR    = ~/=.*/;
 
 	static var spacingP = [
-		spaceP.oneMany(),
-		tabP.oneMany(),
+		spaceP,
+		tabP,
+		retP,
+		nlnP,
+		commentR.regexParser(),
 	].ors().many().lazyF();
 
 	static function withSpacing<T>(p: Void -> Parser<String, T>): Void -> Parser<String, T> {
 		return spacingP._and(p);
 	}
-
-	static var identifierR = ~/[a-zA-Z0-9_-]+/;
-	static var numberR     = ~/[-+]?([0-9]+)?\.?[0-9]+/;
 
 	static public var identifierP = withSpacing(identifierR.regexParser()).tag('identifier').lazyF();
 	static public var numberP     = withSpacing(numberR.regexParser()).tag('number').lazyF();
@@ -24,6 +30,7 @@ class MekTokens {
 	static public var dashT              = withSpacing('-'.identifier());
 	static public var slashT             = withSpacing('/'.identifier());
 	static public var colonT             = withSpacing(':'.identifier());
+	static public var quoteT             = withSpacing('\''.identifier());
 	static public var abilityT           = withSpacing('Ability'.identifier());
 	static public var ablativeT          = withSpacing('Ablative'.identifier());
 	static public var accuracyT          = withSpacing('Accuracy'.identifier());
@@ -96,7 +103,7 @@ class MekTokens {
 	static public var interferenceT      = withSpacing('Interference'.identifier());
 	static public var killsT             = withSpacing('Kills'.identifier());
 	static public var kineticT           = withSpacing('Kinetic'.identifier());
-	static public var kmT                = withSpacing('Km'.identifier());
+	static public var kmT                = withSpacing(~/[Kk]m/.regexParser());
 	static public var legT               = withSpacing('Leg'.identifier());
 	static public var lensT              = withSpacing('Lens'.identifier());
 	static public var liftwireT          = withSpacing('Liftwire'.identifier());
