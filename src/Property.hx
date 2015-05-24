@@ -1,5 +1,3 @@
-import AST;
-
 enum Property {
 	/** System properties **/
 	Cost(v: Float); //  = value + " Cost"
