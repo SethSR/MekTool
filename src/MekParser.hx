@@ -447,465 +447,78 @@ class MekParser {
 }
 
 class MekTest extends haxe.unit.TestCase {
-	public function testCostPropP() {
-		switch (MekParser.costPropP()('1 Cost'.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Cost(1));
-		}
-	}
-
-	public function testSpacePropP() {
-		switch (MekParser.spacePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Space());
-		}
-	}
-
-	public function testKillsPropP() {
-		switch (MekParser.killsPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Kills());
-		}
-	}
-
-	public function testAccuracyPropP() {
-		switch (MekParser.accuracyPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Accuracy());
-		}
-	}
-
-	public function testRangePropP() {
-		switch (MekParser.rangePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Range());
-		}
-	}
-
-	public function testShotsPropP() {
-		switch (MekParser.shotsPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Shots());
-		}
-	}
-
-	public function testWarmUpPropP() {
-		switch (MekParser.warmUpPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, WarmUp());
-		}
-	}
-
-	public function testWideAnglePropP() {
-		switch (MekParser.wideAnglePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, WideAngle());
-		}
-	}
-
-	public function testBurstValuePropP() {
-		switch (MekParser.burstValuePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, BurstValue());
-		}
-	}
-
-	public function testAntiMissilePropP() {
-		switch (MekParser.antiMissilePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, AntiMissile());
-		}
-	}
-
-	public function testAntiPersonnelPropP() {
-		switch (MekParser.antiPersonnelPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, AntiPersonnel());
-		}
-	}
-
-	public function testAllPurposePropP() {
-		switch (MekParser.allPurposePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, AllPurpose());
-		}
-	}
-
-	public function testClipFedPropP() {
-		switch (MekParser.clipFedPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, ClipFed());
-		}
-	}
-
-	public function testMegaBeamPropP() {
-		switch (MekParser.megaBeamPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, MegaBeam());
-		}
-	}
-
-	public function testLongRangePropP() {
-		switch (MekParser.longRangePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, LongRange());
-		}
-	}
-
-	public function testFragilePropP() {
-		switch (MekParser.fragilePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Fragile());
-		}
-	}
-
-	public function testDisruptorPropP() {
-		switch (MekParser.disruptorPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Disruptor());
-		}
-	}
-
-	public function testHydroPropP() {
-		switch (MekParser.hydroPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Hydro());
-		}
-	}
-
-	public function testAttackFactorPropP() {
-		switch (MekParser.attackFactorPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, AttackFactor());
-		}
-	}
-
-	public function testTurnsInUsePropP() {
-		switch (MekParser.turnsInUsePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, TurnsInUse());
-		}
-	}
-
-	public function testBeamShieldPropP() {
-		switch (MekParser.beamShieldPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, BeamShield());
-		}
-	}
-
-	public function testRechargeablePropP() {
-		switch (MekParser.rechargeablePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Rechargeable());
-		}
-	}
-
-	public function testThrownPropP() {
-		switch (MekParser.thrownPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Thrown());
-		}
-	}
-
-	public function testQuickPropP() {
-		switch (MekParser.quickPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Quick());
-		}
-	}
-
-	public function testHyperPropP() {
-		switch (MekParser.hyperPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Hyper());
-		}
-	}
-
-	public function testShockPropP() {
-		switch (MekParser.shockPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Shock());
-		}
-	}
-
-	public function testReturningPropP() {
-		switch (MekParser.returningPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Returning());
-		}
-	}
-
-	public function testHandyPropP() {
-		switch (MekParser.handyPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Handy());
-		}
-	}
-
-	public function testClumsyPropP() {
-		switch (MekParser.clumsyPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Clumsy());
-		}
-	}
-
-	public function testEntanglePropP() {
-		switch (MekParser.entanglePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Entangle());
-		}
-	}
-
-	public function testArmorPiercingPropP() {
-		switch (MekParser.armorPiercingPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, ArmorPiercing());
-		}
-	}
-
-	public function testBlastPropP() {
-		switch (MekParser.blastPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Blast());
-		}
-	}
-
-	public function testSmartPropP() {
-		switch (MekParser.smartPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Smart());
-		}
-	}
-
-	public function testSkillPropP() {
-		switch (MekParser.skillPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Skill());
-		}
-	}
-
-	public function testHypervelocityPropP() {
-		switch (MekParser.hypervelocityPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Hypervelocity());
-		}
-	}
-
-	public function testCountermissilePropP() {
-		switch (MekParser.countermissilePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Countermissile());
-		}
-	}
-
-	public function testFusePropP() {
-		switch (MekParser.fusePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Fuse());
-		}
-	}
-
-	public function testNuclearPropP() {
-		switch (MekParser.nuclearPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Nuclear());
-		}
-	}
-
-	public function testFoamPropP() {
-		switch (MekParser.foamPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Foam());
-		}
-	}
-
-	public function testFlarePropP() {
-		switch (MekParser.flarePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Flare());
-		}
-	}
-
-	public function testScatterPropP() {
-		switch (MekParser.scatterPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Scatter());
-		}
-	}
-
-	public function testSmokePropP() {
-		switch (MekParser.smokePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Smoke());
-		}
-	}
-
-	public function testMultiFeedPropP() {
-		switch (MekParser.multiFeedPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, MultiFeed());
-		}
-	}
-
-	public function testPhalanxPropP() {
-		switch (MekParser.phalanxPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Phalanx());
-		}
-	}
-
-	public function testProjAmmoPropP() {
-		switch (MekParser.projAmmoPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, ProjAmmo());
-		}
-	}
-
-	public function testMorphablePropP() {
-		switch (MekParser.morphablePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Morphable());
-		}
-	}
-
-	public function testPaintballPropP() {
-		switch (MekParser.paintballPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Paintball());
-		}
-	}
-
-	public function testHighExPropP() {
-		switch (MekParser.highExPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, HighEx());
-		}
-	}
-
-	public function testTracerPropP() {
-		switch (MekParser.tracerPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Tracer());
-		}
-	}
-
-	public function testKineticPropP() {
-		switch (MekParser.kineticPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Kinetic());
-		}
-	}
-
-	public function testTanglerPropP() {
-		switch (MekParser.tanglerPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Tangler());
-		}
-	}
-
-	public function testIncendiaryPropP() {
-		switch (MekParser.incendiaryPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Incendiary());
-		}
-	}
-
-	public function testScattershotPropP() {
-		switch (MekParser.scattershotPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Scattershot());
-		}
-	}
-
-	public function testStoppingPowerPropP() {
-		switch (MekParser.stoppingPowerPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, StoppingPower());
-		}
-	}
-
-	public function testDefenseAbilityPropP() {
-		switch (MekParser.defenseAbilityPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, DefenseAbility());
-		}
-	}
-
-	public function testBinderSpacePropP() {
-		switch (MekParser.binderSpacePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, BinderSpace());
-		}
-	}
-
-	public function testResetPropP() {
-		switch (MekParser.resetPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Reset());
-		}
-	}
-
-	public function testQualityPropP() {
-		switch (MekParser.qualityPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Quality());
-		}
-	}
-
-	public function testSensorRangePropP() {
-		switch (MekParser.sensorRangePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, SensorRange());
-		}
-	}
-
-	public function testCommRangePropP() {
-		switch (MekParser.commRangePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, CommRange());
-		}
-	}
-
-	public function testValuePropP() {
-		switch (MekParser.valuePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Value());
-		}
-	}
-
-	public function testRadiusPropP() {
-		switch (MekParser.radiusPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Radius());
-		}
-	}
-
-	public function testBeamingPropP() {
-		switch (MekParser.beamingPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, Beaming());
-		}
-	}
-
-	public function testControlRangePropP() {
-		switch (MekParser.controlRangePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, ControlRange());
-		}
-	}
-
-	public function testOperationRangePropP() {
-		switch (MekParser.operationRangePropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, OperationRange());
-		}
-	}
-
-	public function testWireControlledPropP() {
-		switch (MekParser.wireControlledPropP()(''.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, WireControlled());
-		}
-	}
+	function testProperty(str: String, parser: Parser<String, Property>, prop: Property) {
+		switch (parser(str.reader())) {
+			case Failure(_,_): assertTrue(false);
+			case Success(p,_): assertEquals(p, prop);
+		}
+	}
+
+	public function testCostPropP()                testProperty('1 Cost', MekParser.costPropP(), Cost(1));
+	public function testSpacePropP()               testProperty('1 Space', MekParser.spacePropP(), Space(1));
+	public function testKillsPropP()               testProperty('1 Kills', MekParser.killsPropP(), Kills(1));
+	public function testAccuracyPropP()            testProperty('1 Accuracy', MekParser.accuracyPropP(), Accuracy(1));
+	public function testRangePropP()               testProperty('1 Range', MekParser.rangePropP(), Range(1));
+	public function testShotsPropP()               testProperty('1 Shots', MekParser.shotsPropP(), Shots(1));
+	public function testWarmUpPropP()              testProperty('1 Warm-Up', MekParser.warmUpPropP(), WarmUp(1));
+	public function testWideAnglePropP()           testProperty('1 Wide-Angle', MekParser.wideAnglePropP(), WideAngle(1));
+	public function testBurstValuePropP()          testProperty('1 Burst Value', MekParser.burstValuePropP(), BurstValue(1));
+	public function testAntiMissilePropP()         testProperty('Anti-Missile', MekParser.antiMissilePropP(), AntiMissile(false));
+	public function testVariableAntiMissilePropP() testProperty('Variable Anti-Missile', MekParser.antiMissilePropP(), AntiMissile(true));
+	public function testAntiPersonnelPropP()       testProperty('', MekParser.antiPersonnelPropP(), AntiPersonnel());
+	public function testAllPurposePropP()          testProperty('', MekParser.allPurposePropP(), AllPurpose());
+	public function testClipFedPropP()             testProperty('', MekParser.clipFedPropP(), ClipFed());
+	public function testMegaBeamPropP()            testProperty('', MekParser.megaBeamPropP(), MegaBeam());
+	public function testLongRangePropP()           testProperty('', MekParser.longRangePropP(), LongRange());
+	public function testFragilePropP()             testProperty('', MekParser.fragilePropP(), Fragile());
+	public function testDisruptorPropP()           testProperty('', MekParser.disruptorPropP(), Disruptor());
+	public function testHydroPropP()               testProperty('', MekParser.hydroPropP(), Hydro());
+	public function testAttackFactorPropP()        testProperty('', MekParser.attackFactorPropP(), AttackFactor());
+	public function testTurnsInUsePropP()          testProperty('', MekParser.turnsInUsePropP(), TurnsInUse());
+	public function testBeamShieldPropP()          testProperty('', MekParser.beamShieldPropP(), BeamShield());
+	public function testRechargeablePropP()        testProperty('', MekParser.rechargeablePropP(), Rechargeable());
+	public function testThrownPropP()              testProperty('', MekParser.thrownPropP(), Thrown());
+	public function testQuickPropP()               testProperty('', MekParser.quickPropP(), Quick());
+	public function testHyperPropP()               testProperty('', MekParser.hyperPropP(), Hyper());
+	public function testShockPropP()               testProperty('', MekParser.shockPropP(), Shock());
+	public function testReturningPropP()           testProperty('', MekParser.returningPropP(), Returning());
+	public function testHandyPropP()               testProperty('', MekParser.handyPropP(), Handy());
+	public function testClumsyPropP()              testProperty('', MekParser.clumsyPropP(), Clumsy());
+	public function testEntanglePropP()            testProperty('', MekParser.entanglePropP(), Entangle());
+	public function testArmorPiercingPropP()       testProperty('', MekParser.armorPiercingPropP(), ArmorPiercing());
+	public function testBlastPropP()               testProperty('', MekParser.blastPropP(), Blast());
+	public function testSmartPropP()               testProperty('', MekParser.smartPropP(), Smart());
+	public function testSkillPropP()               testProperty('', MekParser.skillPropP(), Skill());
+	public function testHypervelocityPropP()       testProperty('', MekParser.hypervelocityPropP(), Hypervelocity());
+	public function testCountermissilePropP()      testProperty('', MekParser.countermissilePropP(), Countermissile());
+	public function testFusePropP()                testProperty('', MekParser.fusePropP(), Fuse());
+	public function testNuclearPropP()             testProperty('', MekParser.nuclearPropP(), Nuclear());
+	public function testFoamPropP()                testProperty('', MekParser.foamPropP(), Foam());
+	public function testFlarePropP()               testProperty('', MekParser.flarePropP(), Flare());
+	public function testScatterPropP()             testProperty('', MekParser.scatterPropP(), Scatter());
+	public function testSmokePropP()               testProperty('', MekParser.smokePropP(), Smoke());
+	public function testMultiFeedPropP()           testProperty('', MekParser.multiFeedPropP(), MultiFeed());
+	public function testPhalanxPropP()             testProperty('', MekParser.phalanxPropP(), Phalanx());
+	public function testProjAmmoPropP()            testProperty('', MekParser.projAmmoPropP(), ProjAmmo());
+	public function testMorphablePropP()           testProperty('', MekParser.morphablePropP(), Morphable());
+	public function testPaintballPropP()           testProperty('', MekParser.paintballPropP(), Paintball());
+	public function testHighExPropP()              testProperty('', MekParser.highExPropP(), HighEx());
+	public function testTracerPropP()              testProperty('', MekParser.tracerPropP(), Tracer());
+	public function testKineticPropP()             testProperty('', MekParser.kineticPropP(), Kinetic());
+	public function testTanglerPropP()             testProperty('', MekParser.tanglerPropP(), Tangler());
+	public function testIncendiaryPropP()          testProperty('', MekParser.incendiaryPropP(), Incendiary());
+	public function testScattershotPropP()         testProperty('', MekParser.scattershotPropP(), Scattershot());
+	public function testStoppingPowerPropP()       testProperty('', MekParser.stoppingPowerPropP(), StoppingPower());
+	public function testDefenseAbilityPropP()      testProperty('', MekParser.defenseAbilityPropP(), DefenseAbility());
+	public function testBinderSpacePropP()         testProperty('', MekParser.binderSpacePropP(), BinderSpace());
+	public function testResetPropP()               testProperty('', MekParser.resetPropP(), Reset());
+	public function testQualityPropP()             testProperty('', MekParser.qualityPropP(), Quality());
+	public function testSensorRangePropP()         testProperty('', MekParser.sensorRangePropP(), SensorRange());
+	public function testCommRangePropP()           testProperty('', MekParser.commRangePropP(), CommRange());
+	public function testValuePropP()               testProperty('', MekParser.valuePropP(), Value());
+	public function testRadiusPropP()              testProperty('', MekParser.radiusPropP(), Radius());
+	public function testBeamingPropP()             testProperty('', MekParser.beamingPropP(), Beaming());
+	public function testControlRangePropP()        testProperty('', MekParser.controlRangePropP(), ControlRange());
+	public function testOperationRangePropP()      testProperty('', MekParser.operationRangePropP(), OperationRange());
+	public function testWireControlledPropP()      testProperty('', MekParser.wireControlledPropP(), WireControlled());
 }
