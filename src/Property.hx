@@ -46,6 +46,7 @@ enum Property {
 	Ammo(system_list: Array<Int>); // = "Ammo" + system_list.map("\n    " + _.toInternal).mkString
 
 	/** Energy Pool properties **/
+	Power(n: Int);
 	Morphable; //     = "Morphable"
 
 	/** Shield properties **/
@@ -93,7 +94,7 @@ enum Property {
 	CommRange(n: Int); //      = n + " km Comm Range"
 	ControlRange(n: Int); //   = n + " Control Range"
 	OperationRange(n: Int); // = n + " Operation Range"
-	Quality(n: Int); //        = n + " Quality"
+	QualityValue(n: Int); //   = n + " Quality Value"
 	Radius(n: Int); //         = n + " Radius"
 	SensorRange(n: Int); //    = n + "km Sensor Range"
 	StoppingPower(n: Int); //  = n + " Stopping Power"
