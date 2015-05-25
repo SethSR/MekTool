@@ -7,12 +7,12 @@ typedef Mekton = {
 
 enum MekSys {
 	/** Weapon Systems **/
-	Beam       (name: String, damage: Int, properties: Array<Property>);
-	EnergyMelee(name: String, damage: Int, properties: Array<Property>);
-	Melee      (name: String, damage: Int, properties: Array<Property>);
-	Missile    (name: String, damage: Int, properties: Array<Property>);
-	Projectile (name: String, damage: Int, properties: Array<Property>, ammo   : Array<MekSys>);
-	EnergyPool (name: String, power : Int, properties: Array<Property>, systems: Array<MekSys>);
+	Beam       (name: String, damage: Property, properties: Array<Property>);
+	EnergyMelee(name: String, damage: Property, properties: Array<Property>);
+	Melee      (name: String, damage: Property, properties: Array<Property>);
+	Missile    (name: String, damage: Property, properties: Array<Property>);
+	Projectile (name: String, damage: Property, properties: Array<Property>);
+	EnergyPool (name: String, power : Property, properties: Array<Property>, systems: Array<MekSys>);
 
 	/** Mount Systems **/
 	Mount(system: Option<MekSys>, properties: Array<Property>);
