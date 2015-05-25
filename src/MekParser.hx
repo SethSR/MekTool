@@ -15,7 +15,6 @@ using Armor.ArmorClass;
 using SizeClass;
 using Servo;
 using MekSys.MekSys;
-using OptionalSystem;
 
 @:allow(MekTest)
 class MekParser {
@@ -58,13 +57,24 @@ class MekParser {
 		);
 	}
 
-	static var resolved_systems: Map<String, Map<String, MekSys>>;
+	static var resolved_systems: Map<String, Map<String, MekSys>> = [
+		'beam'        => new Map<String, MekSys>(),
+		'energyMelee' => new Map<String, MekSys>(),
+		'melee'       => new Map<String, MekSys>(),
+		'missile'     => new Map<String, MekSys>(),
+		'projectile'  => new Map<String, MekSys>(),
+		'energyPool'  => new Map<String, MekSys>(),
+		'ammo'        => new Map<String, MekSys>(),
+		'mated'       => new Map<String, MekSys>(),
+		'shield'      => new Map<String, MekSys>(),
+		'reflector'   => new Map<String, MekSys>(),
+		'sensor'      => new Map<String, MekSys>(),
+		'electronic'  => new Map<String, MekSys>(),
+		'remote'      => new Map<String, MekSys>(),
+	];
 	static var resolved_mektons = new Array<Mekton>();
 
 	static function resolveSystem(c: String, s: String, ms: MekSys) {
-		if (!resolved_systems.exists(c))
-			resolved_systems.set(c, new Map<String, MekSys>());
-
 		var mek_map = resolved_systems.get(c);
 		if (!mek_map.exists(s))
 			mek_map.set(s, ms);
@@ -72,12 +82,14 @@ class MekParser {
 			trace (s + ' already defined!');
 	}
 
-	static function getSystem(c: String, s: String) {
-		if (resolved_systems.exists(c))
-			return resolved_systems.get(c).get(s);
+	static function getSystem(c: String, s: String)
+		return if (resolved_systems.exists(c) && resolved_systems.get(c).exists(s))
+			Parsers.success(resolved_systems.get(c).get(s)).lazyF();
 		else
-			return null;
-	}
+			Parsers.fail(s + ' not defined', false).lazyF();
+
+	static function p<T>(s: String): T -> String
+		return function (t: T) return 'parsed ' + s;
 
 
 	/************
@@ -90,123 +102,169 @@ class MekParser {
 		systemDefP,
 	].ors().lazyF();
 
-	static var mektonDefP = mektonT._and(nameDeclP).band(servoP.many()).then(function (p) resolved_mektons.push({ name: p.a, servos: p.b })).lazyF();
+	static var mektonDefP = mektonT._and(nameDeclP).band(servoP.many()).trace(p('Mekton')).then(function (p) resolved_mektons.push({ name: p.a, servos: p.b })).tag('Mekton').lazyF();
 
 	static var servoP = [
-		sizeClassP.band(torsoT._and(armorP.band(systemDeclP.many()))).then(function (p) return Torso(p.a, p.b.a, p.b.b)),
-		sizeClassP.band(headT._and (armorP.band(systemDeclP.many()))).then(function (p) return Head (p.a, p.b.a, p.b.b)),
-		sizeClassP.band(armT._and  (armorP.band(systemDeclP.many()))).then(function (p) return Arm  (p.a, p.b.a, p.b.b)),
-		sizeClassP.band(legT._and  (armorP.band(systemDeclP.many()))).then(function (p) return Leg  (p.a, p.b.a, p.b.b)),
-		sizeClassP.band(tailT._and (armorP.band(systemDeclP.many()))).then(function (p) return Tail (p.a, p.b.a, p.b.b)),
-		sizeClassP.band(wingT._and (armorP.band(systemDeclP.many()))).then(function (p) return Wing (p.a, p.b.a, p.b.b)),
-		sizeClassP.band(podT._and  (armorP.band(systemDeclP.many()))).then(function (p) return Pod  (p.a, p.b.a, p.b.b)),
-	].ors().lazyF();
+		sizeClassP.band(torsoT.trace(p('Torso'))._and(armorP.band(systemDeclP.many()))).then(function (p) return Torso(p.a, p.b.a, p.b.b)),
+		sizeClassP.band(headT .trace(p('Head' ))._and(armorP.band(systemDeclP.many()))).then(function (p) return Head (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(armT  .trace(p('Arm'  ))._and(armorP.band(systemDeclP.many()))).then(function (p) return Arm  (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(legT  .trace(p('Leg'  ))._and(armorP.band(systemDeclP.many()))).then(function (p) return Leg  (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(tailT .trace(p('Tail' ))._and(armorP.band(systemDeclP.many()))).then(function (p) return Tail (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(wingT .trace(p('Wing' ))._and(armorP.band(systemDeclP.many()))).then(function (p) return Wing (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(podT  .trace(p('Pod'  ))._and(armorP.band(systemDeclP.many()))).then(function (p) return Pod  (p.a, p.b.a, p.b.b)),
+	].ors().tag('Servo').lazyF();
 
 	static var sizeClassP = [
-		superlightT.then           (function (p) return Superlight   ),
-		lightweightT.then          (function (p) return Lightweight  ),
-		strikerT.then              (function (p) return Striker      ),
-		mediumT._and(strikerT).then(function (p) return MediumStriker),
-		heavyT._and(strikerT).then (function (p) return HeavyStriker ),
-		mediumweightT.then         (function (p) return Mediumweight ),
-		lightT._and(heavyT).then   (function (p) return LightHeavy   ),
-		mediumT._and(heavyT).then  (function (p) return MediumHeavy  ),
-		armoredT._and(heavyT).then (function (p) return ArmoredHeavy ),
-		superT._and(heavyT).then   (function (p) return SuperHeavy   ),
-		megaT._and(heavyT).then    (function (p) return MegaHeavy    ),
-	].ors().lazyF();
+		superlightT           .trace(p('Superlight'   )).then(function (p) return Superlight   ),
+		lightweightT          .trace(p('Lightweight'  )).then(function (p) return Lightweight  ),
+		strikerT              .trace(p('Striker'      )).then(function (p) return Striker      ),
+		mediumT._and(strikerT).trace(p('MediumStriker')).then(function (p) return MediumStriker),
+		heavyT._and(strikerT) .trace(p('HeavyStriker' )).then(function (p) return HeavyStriker ),
+		mediumweightT         .trace(p('Mediumweight' )).then(function (p) return Mediumweight ),
+		lightT._and(heavyT)   .trace(p('LightHeavy'   )).then(function (p) return LightHeavy   ),
+		mediumT._and(heavyT)  .trace(p('MediumHeavy'  )).then(function (p) return MediumHeavy  ),
+		armoredT._and(heavyT) .trace(p('ArmoredHeavy' )).then(function (p) return ArmoredHeavy ),
+		superT._and(heavyT)   .trace(p('SuperHeavy'   )).then(function (p) return SuperHeavy   ),
+		megaT._and(heavyT)    .trace(p('MegaHeavy'    )).then(function (p) return MegaHeavy    ),
+	].ors().tag('Size Class').lazyF();
 
 	static var armorP = [
-		sizeClassP.band(armorClassP.band(ramT._and(numberP.band(slashT._and(numberP))))).then(function (p) return RAMArmor     (p.a, p.b.a, Std.parseInt(p.b.b.a), Std.parseInt(p.b.b.b))),
-		sizeClassP.band(armorClassP).and_(armorT).then                                       (function (p) return StandardArmor(p.a, p.b)),
-		sizeClassP.band(ramT._and(numberP.band(slashT._and(numberP)))).then                  (function (p) return RAMArmor     (p.a, Standard, Std.parseInt(p.b.a), Std.parseInt(p.b.b))),
-		sizeClassP.and_(armorT).then                                                         (function (p) return StandardArmor(p, Standard)),
-	].ors().lazyF();
+		sizeClassP.band(armorClassP.band(ramT._and(numberP.band(slashT._and(numberP))))).trace(p('RAM Armor')).then(function (p) return RAMArmor     (p.a, p.b.a, Std.parseInt(p.b.b.a), Std.parseInt(p.b.b.b))),
+		sizeClassP.band(armorClassP).and_(armorT)                                       .trace(p('Armor'    )).then(function (p) return StandardArmor(p.a, p.b)),
+		sizeClassP.band(ramT._and(numberP.band(slashT._and(numberP))))                  .trace(p('RAM Armor')).then(function (p) return RAMArmor     (p.a, Standard, Std.parseInt(p.b.a), Std.parseInt(p.b.b))),
+		sizeClassP.and_(armorT)                                                         .trace(p('Armor'    )).then(function (p) return StandardArmor(p, Standard)),
+	].ors().tag('Armor type').lazyF();
 
 	static var armorClassP = [
-		ablativeT.then(function (p) return ArmorClass.Ablative),
-		standardT.then(function (p) return ArmorClass.Standard),
-		alphaT.then   (function (p) return ArmorClass.Alpha   ),
-		betaT.then    (function (p) return ArmorClass.Beta    ),
-		gammaT.then   (function (p) return ArmorClass.Gamma   ),
-	].ors().lazyF();
+		ablativeT.trace(p('Ablative')).then(function (p) return ArmorClass.Ablative),
+		standardT.trace(p('Standard')).then(function (p) return ArmorClass.Standard),
+		alphaT   .trace(p('Alpha'   )).then(function (p) return ArmorClass.Alpha   ),
+		betaT    .trace(p('Beta'    )).then(function (p) return ArmorClass.Beta    ),
+		gammaT   .trace(p('Gamma'   )).then(function (p) return ArmorClass.Gamma   ),
+	].ors().tag('Armor Class').lazyF();
 
 	static var nameDeclP = colonT._and(quoteT._and(identifierP.and_(quoteT))).lazyF();
 
-	static var declarationP = quoteT._and(identifierP.and_(quoteT)).then(function (p) return 0).lazyF();
+	static var beamDeclP        = quoteT._and(identifierP.and_(quoteT)).trace(p('Beam Declaration'        )).andThen(function (p) return getSystem('beam'       , p)).lazyF();
+	static var energyMeleeDeclP = quoteT._and(identifierP.and_(quoteT)).trace(p('Energy Melee Declaration')).andThen(function (p) return getSystem('energyMelee', p)).lazyF();
+	static var meleeDeclP       = quoteT._and(identifierP.and_(quoteT)).trace(p('Melee Declaration'       )).andThen(function (p) return getSystem('melee'      , p)).lazyF();
+	static var missileDeclP     = quoteT._and(identifierP.and_(quoteT)).trace(p('Missile Declaration'     )).andThen(function (p) return getSystem('missile'    , p)).lazyF();
+	static var projectileDeclP  = quoteT._and(identifierP.and_(quoteT)).trace(p('Projectile Declaration'  )).andThen(function (p) return getSystem('projectile' , p)).lazyF();
+	static var energyPoolDeclP  = quoteT._and(identifierP.and_(quoteT)).trace(p('Energy Pool Declaration' )).andThen(function (p) return getSystem('energyPool' , p)).lazyF();
+
+	static var ammoDeclP      = quoteT._and(identifierP.and_(quoteT)).trace(p('Ammo Declaration'              )).andThen(function (p) return getSystem('ammo'      , p)).lazyF();
+	static var matedDeclP     = quoteT._and(identifierP.and_(quoteT)).trace(p('Mated System Declaration'      )).andThen(function (p) return getSystem('mated'     , p)).lazyF();
+	static var shieldDeclP    = quoteT._and(identifierP.and_(quoteT)).trace(p('Shield Declaration'            )).andThen(function (p) return getSystem('shield'    , p)).lazyF();
+	static var reflectorDeclP = quoteT._and(identifierP.and_(quoteT)).trace(p('Reflector Declaration'         )).andThen(function (p) return getSystem('reflector' , p)).lazyF();
+	static var sensorDeclP    = quoteT._and(identifierP.and_(quoteT)).trace(p('Sensor Declaration'            )).andThen(function (p) return getSystem('sensor'    , p)).lazyF();
+	static var elecWarDeclP   = quoteT._and(identifierP.and_(quoteT)).trace(p('Electronic Warfare Declaration')).andThen(function (p) return getSystem('electronic', p)).lazyF();
+	static var remoteDeclP    = quoteT._and(identifierP.and_(quoteT)).trace(p('Remote Control Declaration'    )).andThen(function (p) return getSystem('remote'    , p)).lazyF();
 
 	static var systemDeclP = [
-		// declarationP.then(function (p) trace ('Parsing a declaration')) ,
-		weaponDeclP       ,
-		ammoDeclP         ,
-		matedSystemDeclP  ,
-		shieldDeclP       ,
-		reflectorDeclP    ,
-		sensorDeclP       ,
-		elecWarDeclP      ,
-		remoteControlDeclP,
-		mountDeclP   ,
-		handDeclP    ,
-		crewDeclP    ,
-		reconSysDeclP,
-		optionDeclP  ,
+		weaponDeclP               ,
+		ammoDeclP                 ,
+		matedDeclP                ,
+		shieldDeclP               ,
+		reflectorDeclP            ,
+		sensorDeclP               ,
+		elecWarDeclP              ,
+		remoteDeclP               ,
+		mountDeclP                ,
+		handDeclP                 ,
+		crewDeclP                 ,
+		reconSysDeclP             ,
+		optionDeclP               ,
+	].ors().lazyF();
+
+	static var weaponDeclP = [
+		beamDeclP       .trace(p('Beam')),
+		energyMeleeDeclP.trace(p('EnergyMelee')),
+		meleeDeclP      .trace(p('Melee')),
+		missileDeclP    .trace(p('Missile')),
+		projectileDeclP .trace(p('Projectile')),
+		energyPoolDeclP .trace(p('EnergyPool')),
 	].ors().lazyF();
 
 	static var mountDeclP = [
-		mountT._and(mountSystemP).band(systemPropP.many()).then(function (p) trace ('Parsing a mount declaration')),
-		mountT.band(emptyT)._and(systemPropP.many()).then      (function (p) trace ('Parsing a mount declaration')),
+		mountT._and(mountSystemP).band(systemPropP.many()).trace(p('Mount')).then(function (p) return Mount(Some(p.a), p.b)),
+		mountT.band(emptyT)._and(systemPropP.many())      .trace(p('Mount')).then(function (p) return Mount(None     , p  )),
 	].ors().lazyF();
 
 	static var mountSystemP = [
-		declarationP.then(function (p) trace ('Parsing a declaration')),
-		crewDeclP,
-		optionDeclP,
-	].ors().lazyF();
+		weaponDeclP   .trace(p('Weapon')),
+		ammoDeclP     .trace(p('Ammo')),
+		matedDeclP    .trace(p('Mated')),
+		shieldDeclP   .trace(p('Shield')),
+		reflectorDeclP.trace(p('Reflector')),
+		sensorDeclP   .trace(p('Sensor')),
+		elecWarDeclP  .trace(p('ElecWar')),
+		remoteDeclP   .trace(p('Remote')),
+		crewDeclP     .trace(p('Crew')),
+		reconSysDeclP .trace(p('ReconSys')),
+		optionDeclP   .trace(p('Option')),
+	].ors().trace(p('Mount System')).lazyF();
 
 	static var crewDeclP = [
-		cockpitT.then          (function (p) trace ('Parsing a crew declaration')),
-		passengerT.then        (function (p) trace ('Parsing a crew declaration')),
-		extraT.band(crewT).then(function (p) trace ('Parsing a crew declaration')),
+		cockpitT          .trace(p('Cockpit'   )).then(function (p) return Cockpit),
+		passengerT        .trace(p('Passenger' )).then(function (p) return Passenger),
+		extraT.band(crewT).trace(p('Extra Crew')).then(function (p) return ExtraCrew),
 	].ors().lazyF();
 
 	static var optionDeclP = [
-		stereoT._and(systemPropP.many()).then                              (function (p) trace ('Parsing an option declaration')),
-		liftwireT._and(systemPropP.many()).then                            (function (p) trace ('Parsing an option declaration')),
-		antiTheftT.band(codeT).band(lockT)._and(systemPropP.many()).then   (function (p) trace ('Parsing an option declaration')),
-		spotlightsT._and(systemPropP.many()).then                          (function (p) trace ('Parsing an option declaration')),
-		nightlightsT._and(systemPropP.many()).then                         (function (p) trace ('Parsing an option declaration')),
-		storageT.band(moduleT)._and(systemPropP.many()).then               (function (p) trace ('Parsing an option declaration')),
-		micromanipulatorsT._and(systemPropP.many()).then                   (function (p) trace ('Parsing an option declaration')),
-		slickSprayT._and(systemPropP.many()).then                          (function (p) trace ('Parsing an option declaration')),
-		boggSprayT._and(systemPropP.many()).then                           (function (p) trace ('Parsing an option declaration')),
-		damageT.band(controlT).band(packageT)._and(systemPropP.many()).then(function (p) trace ('Parsing an option declaration')),
-		quickT.band(changeT).band(mountT)._and(systemPropP.many()).then    (function (p) trace ('Parsing an option declaration')),
-		silentT.band(runningT)._and(systemPropP.many()).then               (function (p) trace ('Parsing an option declaration')),
-		parachuteT._and(systemPropP.many()).then                           (function (p) trace ('Parsing an option declaration')),
-		reEntryT.band(packageT)._and(systemPropP.many()).then              (function (p) trace ('Parsing an option declaration')),
-		ejectionT.band(seatT)._and(systemPropP.many()).then                (function (p) trace ('Parsing an option declaration')),
-		escapeT.band(podT)._and(systemPropP.many()).then                   (function (p) trace ('Parsing an option declaration')),
-		maneuverT.band(podT)._and(systemPropP.many()).then                 (function (p) trace ('Parsing an option declaration')),
-		vehicleT.band(podT)._and(systemPropP.many()).then                  (function (p) trace ('Parsing an option declaration')),
+		stereoT._and                              (systemPropP.many()).trace(p('Stereo'                )).then(function (p) return Stereo              (p)),
+		liftwireT._and                            (systemPropP.many()).trace(p('Liftwire'              )).then(function (p) return Liftwire            (p)),
+		antiTheftT._and(codeT.band(lockT))._and   (systemPropP.many()).trace(p('Anti-Theft Code Lock'  )).then(function (p) return AntiTheftCodeLock   (p)),
+		spotlightsT._and                          (systemPropP.many()).trace(p('Spotlights'            )).then(function (p) return Spotlights          (p)),
+		nightlightsT._and                         (systemPropP.many()).trace(p('Nightlights'           )).then(function (p) return Nightlights         (p)),
+		storageT._and(moduleT)._and               (systemPropP.many()).trace(p('Storage Module'        )).then(function (p) return StorageModule       (p)),
+		micromanipulatorsT._and                   (systemPropP.many()).trace(p('Micromanipulators'     )).then(function (p) return Micromanipulators   (p)),
+		slickSprayT._and                          (systemPropP.many()).trace(p('Slick Spray'           )).then(function (p) return SlickSpray          (p)),
+		boggSprayT._and                           (systemPropP.many()).trace(p('Bogg Spray'            )).then(function (p) return BoggSpray           (p)),
+		damageT._and(controlT.band(packageT))._and(systemPropP.many()).trace(p('Damage Control Package')).then(function (p) return DamageControlPackage(p)),
+		quickT._and(changeT.band(mountT))._and    (systemPropP.many()).trace(p('Quick Change Mount'    )).then(function (p) return QuickChangeMount    (p)),
+		silentT._and(runningT)._and               (systemPropP.many()).trace(p('Silent Running'        )).then(function (p) return SilentRunning       (p)),
+		parachuteT._and                           (systemPropP.many()).trace(p('Parachute'             )).then(function (p) return Parachute           (p)),
+		reEntryT._and(packageT)._and              (systemPropP.many()).trace(p('Re-Entry Package'      )).then(function (p) return ReEntryPackage      (p)),
+		ejectionT._and(seatT)._and                (systemPropP.many()).trace(p('Ejection Seat'         )).then(function (p) return EjectionSeat        (p)),
+		escapeT._and(podT)._and                   (systemPropP.many()).trace(p('Escape Pod'            )).then(function (p) return EscapePod           (p)),
+		maneuverT._and(podT)._and                 (systemPropP.many()).trace(p('Maneuver Pod'          )).then(function (p) return ManeuverPod         (p)),
+		vehicleT._and(podT)._and                  (systemPropP.many()).trace(p('Vehicle Pod'           )).then(function (p) return VehiclePod          (p)),
 	].ors().lazyF();
 
 
 	static var handDeclP = [
-		handT._and(declarationP).band(systemPropP.many()).then(function (p) trace ('Parsing a hand declaration')),
-		handT.band(emptyT)._and(systemPropP.many()).then      (function (p) trace ('Parsing a hand declaration')),
+		handT._and(handSystemP).band(systemPropP.many()).trace(p('Hand')).then(function (p) return Hand(Some(p.a), p.b)),
+		handT.band(emptyT)._and(systemPropP.many())     .trace(p('Hand')).then(function (p) return Hand(None     , p  )),
 	].ors().lazyF();
 
-	static var reconSysDeclP = reconSysTypeP.band(systemPropP.many()).then(function (p) trace ('Parsing a recon system declaration')).lazyF();
+	static var handSystemP = [
+		weaponDeclP   ,
+		ammoDeclP     ,
+		matedDeclP    ,
+		shieldDeclP   ,
+		reflectorDeclP,
+		sensorDeclP   ,
+		elecWarDeclP  ,
+		remoteDeclP   ,
+		crewDeclP     ,
+		reconSysDeclP ,
+		optionDeclP   ,
+	].ors().lazyF();
 
-	static var reconSysTypeP = [
-		advancedT.band(sensorT).band(packageT).then          (function (p) trace ('Parsing a recon system')),
-		radioT.band(slashT).band(radarT).band(analyzerT).then(function (p) trace ('Parsing a recon system')),
-		resolutionT.band(intensifiersT).then                 (function (p) trace ('Parsing a recon system')),
-		spottingT.band(radarT).then                          (function (p) trace ('Parsing a recon system')),
-		targetT.band(analyzerT).then                         (function (p) trace ('Parsing a recon system')),
-		marineT.band(suiteT).then                            (function (p) trace ('Parsing a recon system')),
-		gravityT.band(lensT).then                            (function (p) trace ('Parsing a recon system')),
-		magneticT.band(resonanceT).then                      (function (p) trace ('Parsing a recon system')),
+	static var reconSysDeclP = [
+		advancedT._and(sensorT.band(packageT))._and          (systemPropP.many()).trace(p('Advanced Sensor Package')).then(function (p) return AdvancedSensorPackage (p)),
+		radioT._and(slashT.band(radarT).band(analyzerT))._and(systemPropP.many()).trace(p('Radio Radar Analyzer'   )).then(function (p) return RadioRadarAnalyzer    (p)),
+		resolutionT._and(intensifiersT)._and                 (systemPropP.many()).trace(p('Resolution Intensifiers')).then(function (p) return ResolutionIntensifiers(p)),
+		spottingT._and(radarT)._and                          (systemPropP.many()).trace(p('Spotting Radar'         )).then(function (p) return SpottingRadar         (p)),
+		targetT._and(analyzerT)._and                         (systemPropP.many()).trace(p('Target Analyzer'        )).then(function (p) return TargetAnalyzer        (p)),
+		marineT._and(suiteT)._and                            (systemPropP.many()).trace(p('Marine Suite'           )).then(function (p) return MarineSuite           (p)),
+		gravityT._and(lensT)._and                            (systemPropP.many()).trace(p('Gravity Lens'           )).then(function (p) return GravityLens           (p)),
+		magneticT._and(resonanceT)._and                      (systemPropP.many()).trace(p('Magnetic Resonance'     )).then(function (p) return MagneticResonance     (p)),
+	].ors().lazyF();
+
+	static var energyPoolSystemP = [
+		weaponDeclP,
+		shieldDeclP,
 	].ors().lazyF();
 
 	static var systemDefP = [
@@ -229,23 +287,23 @@ class MekParser {
 		energyPoolDefP,
 	].ors().lazyF();
 
-	static var beamDefP        = beamT._and(nameDeclP).band(damagePropP).band(beamPropP.many()).then                      (function (p) trace ('Parsing beam weapon definition'        )).lazyF();
-	static var energyMeleeDefP = energyT._and(meleeT)._and(nameDeclP).band(damagePropP).band(energyMeleePropP.many()).then(function (p) trace ('Parsing an energy melee definition'    )).lazyF();
-	static var meleeDefP       = meleeT._and(nameDeclP).band(damagePropP).band(meleePropP.many()).then                    (function (p) trace ('Parsing a melee weapon definition'     )).lazyF();
-	static var missileDefP     = missileT._and(nameDeclP).band(damagePropP).band(missilePropP.many()).then                (function (p) trace ('Parsing a missile weapon definition'   )).lazyF();
-	static var projectileDefP  = projectileT._and(nameDeclP).band(damagePropP).band(projectilePropP.many()).then          (function (p) trace ('Parsing a projectile weapon definition')).lazyF();
-	static var energyPoolDefP  = energyT._and(poolT)._and(nameDeclP).band(powerPropP).band(energyPoolPropP.many()).then   (function (p) trace ('Parsing an energy pool definition'     )).lazyF();
+	static var beamDefP        = beamT._and(nameDeclP.band(damagePropP.band(beamPropP.many())))                      .trace(p('')).then(function (p) return resolveSystem('beam'       , p.a, Beam       (p.a, p.b.a, p.b.b))).lazyF();
+	static var energyMeleeDefP = energyT._and(meleeT._and(nameDeclP.band(damagePropP.band(energyMeleePropP.many())))).trace(p('')).then(function (p) return resolveSystem('energyMelee', p.a, EnergyMelee(p.a, p.b.a, p.b.b))).lazyF();
+	static var meleeDefP       = meleeT._and(nameDeclP.band(damagePropP.band(meleePropP.many())))                    .trace(p('')).then(function (p) return resolveSystem('melee'      , p.a, Melee      (p.a, p.b.a, p.b.b))).lazyF();
+	static var missileDefP     = missileT._and(nameDeclP.band(damagePropP.band(missilePropP.many())))                .trace(p('')).then(function (p) return resolveSystem('missile'    , p.a, Missile    (p.a, p.b.a, p.b.b))).lazyF();
+	static var projectileDefP  = projectileT._and(nameDeclP.band(damagePropP.band(projectilePropP.many())))          .trace(p('')).then(function (p) return resolveSystem('projectile' , p.a, Projectile (p.a, p.b.a, p.b.b))).lazyF();
+	static var energyPoolDefP  = energyT._and(poolT._and(nameDeclP.band(powerPropP.band(energyPoolPropP.many().band(energyPoolSystemP.many())))))   .trace(p('')).then(function (p) return resolveSystem('energyPool' , p.a, EnergyPool (p.a, p.b.a, p.b.b.a, p.b.b.b))).lazyF();
 
-	static var ammoDefP          = ammoT._and(nameDeclP).band(ammoPropP.many()).then                                           (function (p) trace ('Parsing an ammo definition'         )).lazyF();
-	static var matedSystemDefP   = matedT._and(nameDeclP).band(systemPropP.many()).band(systemDeclP).band(systemDeclP).then    (function (p) trace ('Parsing a mated system'             )).lazyF();
-	static var reflectorDefP     = reflectorT._and(nameDeclP).band(qualityValuePropP).band(systemPropP.many()).then            (function (p) trace ('Parsing a reflector definition'     )).lazyF();
-	static var sensorDefP        = sizeClassP.band(sensorT._and(nameDeclP)).band(sensorPropP.many()).then                      (function (p) trace ('Parsing a sensor definition'        )).lazyF();
-	static var elecWarDefP       = ecmTypeP.band(nameDeclP).band(valuePropP).band(ecmPropP.many()).then                        (function (p) trace ('Parsing an ECM definition'          )).lazyF();
-	static var remoteControlDefP = sizeClassP.band(remoteT._and(controlT)._and(nameDeclP)).band(remoteControlPropP.many()).then(function (p) trace ('Parsing a remote control definition')).lazyF();
+	static var ammoDefP          = ammoT._and(nameDeclP).band(ammoPropP.many())                                           .trace(p('')).then(function (p) trace ('Parsing an ammo definition'         )).lazyF();
+	static var matedSystemDefP   = matedT._and(nameDeclP).band(systemPropP.many()).band(systemDeclP).band(systemDeclP)    .trace(p('')).then(function (p) trace ('Parsing a mated system'             )).lazyF();
+	static var reflectorDefP     = reflectorT._and(nameDeclP).band(qualityValuePropP).band(systemPropP.many())            .trace(p('')).then(function (p) trace ('Parsing a reflector definition'     )).lazyF();
+	static var sensorDefP        = sizeClassP.band(sensorT._and(nameDeclP)).band(sensorPropP.many())                      .trace(p('')).then(function (p) trace ('Parsing a sensor definition'        )).lazyF();
+	static var elecWarDefP       = ecmTypeP.band(nameDeclP).band(valuePropP).band(ecmPropP.many())                        .trace(p('')).then(function (p) trace ('Parsing an ECM definition'          )).lazyF();
+	static var remoteControlDefP = sizeClassP.band(remoteT._and(controlT)._and(nameDeclP)).band(remoteControlPropP.many()).trace(p('')).then(function (p) trace ('Parsing a remote control definition')).lazyF();
 
 	static var shieldDefP = [
-		shieldTypeP.option().band(armorClassP.option()).band(sizeClassP).and_(shieldT).band(nameDeclP).band(shieldPropP.many()).then(function (p) trace ('Parsing a shield definition')),
-		shieldTypeP.option().band(armorClassP.option()).band(sizeClassP).and_(shieldT).band(shieldPropP.many()).then                (function (p) trace ('Parsing a shield definition')),
+		shieldTypeP.option().band(armorClassP.option()).band(sizeClassP).and_(shieldT).band(nameDeclP).band(shieldPropP.many()).trace(p('')).then(function (p) trace ('Parsing a shield definition')),
+		shieldTypeP.option().band(armorClassP.option()).band(sizeClassP).and_(shieldT).band(shieldPropP.many())                .trace(p('')).then(function (p) trace ('Parsing a shield definition')),
 	].ors().lazyF();
 
 
@@ -339,8 +397,8 @@ class MekParser {
 	].ors().lazyF();
 
 	static var powerPropP = [
-		numberP.and_(powerT).then (function (p) return Property.Power(Std.parseInt(p))),
-		batteryT.and_(powerT).then(function (p) return Property.Power(-1)),
+		numberP.and_(powerT) .trace(p('')).then(function (p) return Property.Power(Std.parseInt(p))),
+		batteryT.and_(powerT).trace(p('')).then(function (p) return Property.Power(-1)             ),
 	].ors().lazyF();
 
 	static var energyPoolPropP = [
@@ -382,12 +440,12 @@ class MekParser {
 	].ors().lazyF();
 
 	static var weaknessPropP = [
-		ablativeT.or(screenT).then                 (function (p) return Property.Screen       ),
-		energyT._and(onlyT).or(interferenceT).then (function (p) return Property.Interference ),
-		matterT._and(onlyT).or(kineticT).then      (function (p) return Property.Kinetic      ),
-		rangedT._and(onlyT).or(swashbucklingT).then(function (p) return Property.Swashbuckling),
-		enclosingT.or(mirrorT).then                (function (p) return Property.Mirror       ),
-		offensiveT.or(surgeT).then                 (function (p) return Property.Surge        ),
+		ablativeT.or(screenT)                 .trace(p('')).then(function (p) return Property.Screen       ),
+		energyT._and(onlyT).or(interferenceT) .trace(p('')).then(function (p) return Property.Interference ),
+		matterT._and(onlyT).or(kineticT)      .trace(p('')).then(function (p) return Property.Kinetic      ),
+		rangedT._and(onlyT).or(swashbucklingT).trace(p('')).then(function (p) return Property.Swashbuckling),
+		enclosingT.or(mirrorT)                .trace(p('')).then(function (p) return Property.Mirror       ),
+		offensiveT.or(surgeT)                 .trace(p('')).then(function (p) return Property.Surge        ),
 	].ors().lazyF();
 
 	static var sensorPropP = [
@@ -423,73 +481,81 @@ class MekParser {
 	*    Basic Property Parsers    *
 	*                              *
 	*******************************/
-	static var costPropP           = numberP.and_(costT).then                                                      (function (p) return Property.Cost(Std.parseFloat(p))).lazyF();
-	static var spacePropP          = numberP.and_(spaceT).then                                                     (function (p) return Property.Space(Std.parseFloat(p))).lazyF();
-	static var killsPropP          = numberP.and_(killsT).then                                                     (function (p) return Property.Kills(Std.parseFloat(p))).lazyF();
-	static var damagePropP         = numberP.and_(damageT).then                                                    (function (p) return Property.Damage(Std.parseFloat(p))).lazyF();
-	static var accuracyPropP       = numberP.and_(accuracyT).then                                                  (function (p) return Property.Accuracy(Std.parseInt(p))).lazyF();
-	static var rangePropP          = numberP.and_(rangeT).then                                                     (function (p) return Property.Range(Std.parseInt(p))).lazyF();
-	static var shotsPropP          = numberP.and_(shotsT).then                                                     (function (p) return Property.Shots(Std.parseInt(p))).lazyF();
-	static var warmUpPropP         = numberP.and_(warmUpT).then                                                    (function (p) return Property.WarmUp(Std.parseInt(p))).lazyF();
-	static var wideAnglePropP      = numberP.and_(wideT).and_(angleT).then                                         (function (p) return Property.WideAngle(Std.parseInt(p))).lazyF();
-	static var burstValuePropP     = numberP.and_(burstT).and_(valueT).then                                        (function (p) return Property.BurstValue(Std.parseInt(p))).lazyF();
-	static var antiMissilePropP    = variableT.option().and_(antiMissileT).then                                    (function (p) return Property.AntiMissile(switch (p) { case Some(b): true; case None: false; })).lazyF();
-	static var antiPersonnelPropP  = variableT.option().and_(antiPersonnelT).then                                  (function (p) return Property.AntiPersonnel(switch (p) { case Some(b): true; case None: false; })).lazyF();
-	static var allPurposePropP     = allPurposeT.then                                                              (function (p) return Property.AllPurpose).lazyF();
-	static var clipFedPropP        = clipFedT.then                                                                 (function (p) return Property.ClipFed).lazyF();
-	static var megaBeamPropP       = megaBeamT.then                                                                (function (p) return Property.MegaBeam).lazyF();
-	static var longRangePropP      = longT.band(rangeT).then                                                       (function (p) return Property.LongRange).lazyF();
-	static var fragilePropP        = fragileT.then                                                                 (function (p) return Property.Fragile).lazyF();
-	static var disruptorPropP      = disruptorT.then                                                               (function (p) return Property.Disruptor).lazyF();
-	static var hydroPropP          = hydroT.then                                                                   (function (p) return Property.Hydro).lazyF();
-	static var attackFactorPropP   = numberP.and_(attackT).and_(factorT).then                                      (function (p) return Property.AttackFactor(Std.parseInt(p))).lazyF();
-	static var turnsInUsePropP     = numberP.and_(turnsT).and_(inT).and_(useT).then                                (function (p) return Property.TurnsInUse(Std.parseInt(p))).lazyF();
-	static var beamShieldPropP     = variableT.option().and_(beamT).and_(shieldT).then                             (function (p) return Property.BeamShield(switch (p) { case Some(b): true; case None: false; })).lazyF();
-	static var rechargeablePropP   = rechargeableT.then                                                            (function (p) return Property.Rechargeable).lazyF();
-	static var thrownPropP         = thrownT.then                                                                  (function (p) return Property.Thrown).lazyF();
-	static var quickPropP          = quickT.then                                                                   (function (p) return Property.Quick).lazyF();
-	static var hyperPropP          = hyperT.then                                                                   (function (p) return Property.Hyper).lazyF();
-	static var shockPropP          = shockT._and(onlyT.or(addedT)).or(shockT).then                                 (function (p) return Property.Shock(switch (p) { case 'Only': true; case 'Added': false; case _: false; })).lazyF();
-	static var returningPropP      = returningT.then                                                               (function (p) return Property.Returning).lazyF();
-	static var handyPropP          = handyT.then                                                                   (function (p) return Property.Handy).lazyF();
-	static var clumsyPropP         = clumsyT.then                                                                  (function (p) return Property.Clumsy).lazyF();
-	static var entanglePropP       = entangleT.then                                                                (function (p) return Property.Entangle).lazyF();
-	static var armorPiercingPropP  = armorPiercingT.then                                                           (function (p) return Property.ArmorPiercing).lazyF();
-	static var blastPropP          = blastT._and(numberP).then                                                     (function (p) return Property.Blast(Std.parseInt(p))).lazyF();
-	static var smartPropP          = numberP.and_(smartT).then                                                     (function (p) return Property.Smart(Std.parseInt(p))).lazyF();
-	static var skillPropP          = numberP.and_(skillT).then                                                     (function (p) return Property.Skill(Std.parseInt(p))).lazyF();
-	static var hypervelocityPropP  = hypervelocityT.then                                                           (function (p) return Property.Hypervelocity).lazyF();
-	static var countermissilePropP = variableT.option().and_(countermissileT).then                                 (function (p) return Property.Countermissile(switch (p) { case Some(b): true; case None: false; })).lazyF();
-	static var fusePropP           = fuseT.then                                                                    (function (p) return Property.Fuse).lazyF();
-	static var nuclearPropP        = nuclearT.then                                                                 (function (p) return Property.Nuclear).lazyF();
-	static var foamPropP           = foamT.then                                                                    (function (p) return Property.Foam).lazyF();
-	static var flarePropP          = flareT.then                                                                   (function (p) return Property.Flare).lazyF();
-	static var scatterPropP        = scatterT.then                                                                 (function (p) return Property.Scatter).lazyF();
-	static var smokePropP          = smokeT.then                                                                   (function (p) return Property.Smoke).lazyF();
-	static var multiFeedPropP      = numberP.and_(multiFeedT).then                                                 (function (p) return Property.MultiFeed(Std.parseInt(p))).lazyF();
-	static var phalanxPropP        = variableT.option().and_(phalanxT).then                                        (function (p) return Property.Phalanx(switch (p) { case Some(b): true; case None: false; })).lazyF();
-	static var projAmmoPropP       = ammoT._and(declarationP.many()).then                                          (function (p) return Property.Ammo(p)).lazyF();
-	static var morphablePropP      = morphableT.then                                                               (function (p) return Property.Morphable).lazyF();
-	static var paintballPropP      = paintballT.then                                                               (function (p) return Property.Paintball).lazyF();
-	static var highExPropP         = highExplosiveT.then                                                           (function (p) return Property.HighEx).lazyF();
-	static var tracerPropP         = tracerT.then                                                                  (function (p) return Property.Tracer).lazyF();
-	static var kineticPropP        = kineticT.then                                                                 (function (p) return Property.Kinetic).lazyF();
-	static var tanglerPropP        = tanglerT.then                                                                 (function (p) return Property.Tangler).lazyF();
-	static var incendiaryPropP     = incendiaryT.then                                                              (function (p) return Property.Incendiary).lazyF();
-	static var scattershotPropP    = scattershotT.then                                                             (function (p) return Property.Scattershot).lazyF();
-	static var stoppingPowerPropP  = numberP.and_(stoppingT).and_(powerT).then                                     (function (p) return Property.StoppingPower(Std.parseInt(p))).lazyF();
-	static var defenseAbilityPropP = numberP.and_(defenseT).and_(abilityT).then                                    (function (p) return Property.DefenseAbility(Std.parseInt(p))).lazyF();
-	static var binderSpacePropP    = dashT._and(numberP.and_(slashT).band(numberP)).and_(binderT.band(spaceT)).then(function (p) return Property.BinderSpace(Std.parseInt(p.a), Std.parseInt(p.b))).lazyF();
-	static var resetPropP          = numberP.and_(resetT).then                                                     (function (p) return Property.Reset(Std.parseInt(p))).lazyF();
-	static var qualityValuePropP   = numberP.and_(qualityT).and_(valueT).then                                      (function (p) return Property.QualityValue(Std.parseInt(p))).lazyF();
-	static var sensorRangePropP    = numberP.and_(kmT.band(sensorT).band(rangeT)).then                             (function (p) return Property.SensorRange(Std.parseInt(p))).lazyF();
-	static var commRangePropP      = numberP.and_(kmT.band(commT).band(rangeT)).then                               (function (p) return Property.CommRange(Std.parseInt(p))).lazyF();
-	static var valuePropP          = numberP.and_(valueT).then                                                     (function (p) return Property.Value(Std.parseInt(p))).lazyF();
-	static var radiusPropP         = numberP.and_(radiusT).then                                                    (function (p) return Property.Radius(Std.parseInt(p))).lazyF();
-	static var beamingPropP        = numberP.and_(beamingT).then                                                   (function (p) return Property.Beaming(Std.parseInt(p))).lazyF();
-	static var controlRangePropP   = numberP.and_(controlT).and_(rangeT).then                                      (function (p) return Property.ControlRange(Std.parseInt(p))).lazyF();
-	static var operationRangePropP = numberP.and_(operationT).and_(rangeT).then                                    (function (p) return Property.OperationRange(Std.parseInt(p)))              .lazyF();
-	static var wireControlledPropP = wireControlledT.then                                                          (function (p) return Property.WireControlled).lazyF();
+	static function propSwitch<T>(p: Option<T>) switch (p) {
+		case Some(b): return true;
+		case None   : return false;
+	}
+
+	static var accuracyPropP       = numberP.and_(accuracyT)                                                  .trace(p('')).then(function (p) return Property.Accuracy(Std.parseInt(p))                        ).lazyF();
+	static var allPurposePropP     = allPurposeT                                                              .trace(p('')).then(function (p) return Property.AllPurpose                                       ).lazyF();
+	static var antiMissilePropP    = variableT.option().and_(antiMissileT)                                    .trace(p('')).then(function (p) return Property.AntiMissile(propSwitch(p))                       ).lazyF();
+	static var antiPersonnelPropP  = variableT.option().and_(antiPersonnelT)                                  .trace(p('')).then(function (p) return Property.AntiPersonnel(propSwitch(p))                     ).lazyF();
+	static var armorPiercingPropP  = armorPiercingT                                                           .trace(p('')).then(function (p) return Property.ArmorPiercing                                    ).lazyF();
+	static var attackFactorPropP   = numberP.and_(attackT).and_(factorT)                                      .trace(p('')).then(function (p) return Property.AttackFactor(Std.parseInt(p))                    ).lazyF();
+	static var beamingPropP        = numberP.and_(beamingT)                                                   .trace(p('')).then(function (p) return Property.Beaming(Std.parseInt(p))                         ).lazyF();
+	static var beamShieldPropP     = variableT.option().and_(beamT).and_(shieldT)                             .trace(p('')).then(function (p) return Property.BeamShield(propSwitch(p))                        ).lazyF();
+	static var binderSpacePropP    = dashT._and(numberP.band(slashT._and(numberP))).and_(binderT.band(spaceT)).trace(p('')).then(function (p) return Property.BinderSpace(Std.parseInt(p.a), Std.parseInt(p.b))).lazyF();
+	static var blastPropP          = blastT._and(numberP)                                                     .trace(p('')).then(function (p) return Property.Blast(Std.parseInt(p))                           ).lazyF();
+	static var burstValuePropP     = numberP.and_(burstT).and_(valueT)                                        .trace(p('')).then(function (p) return Property.BurstValue(Std.parseInt(p))                      ).lazyF();
+	static var clipFedPropP        = clipFedT                                                                 .trace(p('')).then(function (p) return Property.ClipFed                                          ).lazyF();
+	static var clumsyPropP         = clumsyT                                                                  .trace(p('')).then(function (p) return Property.Clumsy                                           ).lazyF();
+	static var commRangePropP      = numberP.and_(kmT.band(commT).band(rangeT))                               .trace(p('')).then(function (p) return Property.CommRange(Std.parseInt(p))                       ).lazyF();
+	static var controlRangePropP   = numberP.and_(controlT).and_(rangeT)                                      .trace(p('')).then(function (p) return Property.ControlRange(Std.parseInt(p))                    ).lazyF();
+	static var costPropP           = numberP.and_(costT)                                                      .trace(p('')).then(function (p) return Property.Cost(Std.parseFloat(p))                          ).lazyF();
+	static var countermissilePropP = variableT.option().and_(countermissileT)                                 .trace(p('')).then(function (p) return Property.Countermissile(propSwitch(p))                    ).lazyF();
+	static var damagePropP         = numberP.and_(damageT)                                                    .trace(p('')).then(function (p) return Property.Damage(Std.parseFloat(p))                        ).lazyF();
+	static var defenseAbilityPropP = numberP.and_(defenseT).and_(abilityT)                                    .trace(p('')).then(function (p) return Property.DefenseAbility(Std.parseInt(p))                  ).lazyF();
+	static var disruptorPropP      = disruptorT                                                               .trace(p('')).then(function (p) return Property.Disruptor                                        ).lazyF();
+	static var entanglePropP       = entangleT                                                                .trace(p('')).then(function (p) return Property.Entangle                                         ).lazyF();
+	static var flarePropP          = flareT                                                                   .trace(p('')).then(function (p) return Property.Flare                                            ).lazyF();
+	static var foamPropP           = foamT                                                                    .trace(p('')).then(function (p) return Property.Foam                                             ).lazyF();
+	static var fragilePropP        = fragileT                                                                 .trace(p('')).then(function (p) return Property.Fragile                                          ).lazyF();
+	static var fusePropP           = fuseT                                                                    .trace(p('')).then(function (p) return Property.Fuse                                             ).lazyF();
+	static var handyPropP          = handyT                                                                   .trace(p('')).then(function (p) return Property.Handy                                            ).lazyF();
+	static var highExPropP         = highExplosiveT                                                           .trace(p('')).then(function (p) return Property.HighEx                                           ).lazyF();
+	static var hydroPropP          = hydroT                                                                   .trace(p('')).then(function (p) return Property.Hydro                                            ).lazyF();
+	static var hyperPropP          = hyperT                                                                   .trace(p('')).then(function (p) return Property.Hyper                                            ).lazyF();
+	static var hypervelocityPropP  = hypervelocityT                                                           .trace(p('')).then(function (p) return Property.Hypervelocity                                    ).lazyF();
+	static var incendiaryPropP     = incendiaryT                                                              .trace(p('')).then(function (p) return Property.Incendiary                                       ).lazyF();
+	static var killsPropP          = numberP.and_(killsT)                                                     .trace(p('')).then(function (p) return Property.Kills(Std.parseFloat(p))                         ).lazyF();
+	static var kineticPropP        = kineticT                                                                 .trace(p('')).then(function (p) return Property.Kinetic                                          ).lazyF();
+	static var longRangePropP      = longT.band(rangeT)                                                       .trace(p('')).then(function (p) return Property.LongRange                                        ).lazyF();
+	static var megaBeamPropP       = megaBeamT                                                                .trace(p('')).then(function (p) return Property.MegaBeam                                         ).lazyF();
+	static var morphablePropP      = morphableT                                                               .trace(p('')).then(function (p) return Property.Morphable                                        ).lazyF();
+	static var multiFeedPropP      = numberP.and_(multiFeedT)                                                 .trace(p('')).then(function (p) return Property.MultiFeed(Std.parseInt(p))                       ).lazyF();
+	static var nuclearPropP        = nuclearT                                                                 .trace(p('')).then(function (p) return Property.Nuclear                                          ).lazyF();
+	static var operationRangePropP = numberP.and_(operationT).and_(rangeT)                                    .trace(p('')).then(function (p) return Property.OperationRange(Std.parseInt(p))                  ).lazyF();
+	static var paintballPropP      = paintballT                                                               .trace(p('')).then(function (p) return Property.Paintball                                        ).lazyF();
+	static var phalanxPropP        = variableT.option().and_(phalanxT)                                        .trace(p('')).then(function (p) return Property.Phalanx(propSwitch(p))                           ).lazyF();
+	static var projAmmoPropP       = ammoT._and(ammoDeclP.many())                                             .trace(p('')).then(function (p) return Property.Ammo(p)                                          ).lazyF();
+	static var qualityValuePropP   = numberP.and_(qualityT).and_(valueT)                                      .trace(p('')).then(function (p) return Property.QualityValue(Std.parseInt(p))                    ).lazyF();
+	static var quickPropP          = quickT                                                                   .trace(p('')).then(function (p) return Property.Quick                                            ).lazyF();
+	static var radiusPropP         = numberP.and_(radiusT)                                                    .trace(p('')).then(function (p) return Property.Radius(Std.parseInt(p))                          ).lazyF();
+	static var rangePropP          = numberP.and_(rangeT)                                                     .trace(p('')).then(function (p) return Property.Range(Std.parseInt(p))                           ).lazyF();
+	static var rechargeablePropP   = rechargeableT                                                            .trace(p('')).then(function (p) return Property.Rechargeable                                     ).lazyF();
+	static var resetPropP          = numberP.and_(resetT)                                                     .trace(p('')).then(function (p) return Property.Reset(Std.parseInt(p))                           ).lazyF();
+	static var returningPropP      = returningT                                                               .trace(p('')).then(function (p) return Property.Returning                                        ).lazyF();
+	static var scatterPropP        = scatterT                                                                 .trace(p('')).then(function (p) return Property.Scatter                                          ).lazyF();
+	static var scattershotPropP    = scattershotT                                                             .trace(p('')).then(function (p) return Property.Scattershot                                      ).lazyF();
+	static var sensorRangePropP    = numberP.and_(kmT.band(sensorT).band(rangeT))                             .trace(p('')).then(function (p) return Property.SensorRange(Std.parseInt(p))                     ).lazyF();
+	static var shockPropP          = shockT._and(onlyT.or(addedT)).or(shockT)                                 .trace(p('')).then(function (p) return Property.Shock(switch (p) {
+																																																																																		case 'Only' : true;
+																																																																																		case _      : false;
+																																																																																	})                                         ).lazyF();
+	static var shotsPropP          = numberP.and_(shotsT)                                                     .trace(p('')).then(function (p) return Property.Shots(Std.parseInt(p))                           ).lazyF();
+	static var skillPropP          = numberP.and_(skillT)                                                     .trace(p('')).then(function (p) return Property.Skill(Std.parseInt(p))                           ).lazyF();
+	static var smartPropP          = numberP.and_(smartT)                                                     .trace(p('')).then(function (p) return Property.Smart(Std.parseInt(p))                           ).lazyF();
+	static var smokePropP          = smokeT                                                                   .trace(p('')).then(function (p) return Property.Smoke                                            ).lazyF();
+	static var spacePropP          = numberP.and_(spaceT)                                                     .trace(p('')).then(function (p) return Property.Space(Std.parseFloat(p))                         ).lazyF();
+	static var stoppingPowerPropP  = numberP.and_(stoppingT).and_(powerT)                                     .trace(p('')).then(function (p) return Property.StoppingPower(Std.parseInt(p))                   ).lazyF();
+	static var tanglerPropP        = tanglerT                                                                 .trace(p('')).then(function (p) return Property.Tangler                                          ).lazyF();
+	static var thrownPropP         = thrownT                                                                  .trace(p('')).then(function (p) return Property.Thrown                                           ).lazyF();
+	static var tracerPropP         = tracerT                                                                  .trace(p('')).then(function (p) return Property.Tracer                                           ).lazyF();
+	static var turnsInUsePropP     = numberP.and_(turnsT).and_(inT).and_(useT)                                .trace(p('')).then(function (p) return Property.TurnsInUse(Std.parseInt(p))                      ).lazyF();
+	static var valuePropP          = numberP.and_(valueT)                                                     .trace(p('')).then(function (p) return Property.Value(Std.parseInt(p))                           ).lazyF();
+	static var warmUpPropP         = numberP.and_(warmUpT)                                                    .trace(p('')).then(function (p) return Property.WarmUp(Std.parseInt(p))                          ).lazyF();
+	static var wideAnglePropP      = numberP.and_(wideT).and_(angleT)                                         .trace(p('')).then(function (p) return Property.WideAngle(Std.parseInt(p))                       ).lazyF();
+	static var wireControlledPropP = wireControlledT                                                          .trace(p('')).then(function (p) return Property.WireControlled                                   ).lazyF();
 }
 
 class MekTest extends haxe.unit.TestCase {
@@ -571,7 +637,7 @@ class MekTest extends haxe.unit.TestCase {
 			case Failure(_,_): assertTrue(false);
 			case Success(p,_): switch (p) {
 				case Ammo(list):
-					assertEquals(list, new Array<Int>());
+					assertEquals(list, []);
 				case _         : assertTrue(false);
 			}
 		}
