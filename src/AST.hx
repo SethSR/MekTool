@@ -1,8 +1,15 @@
-using com.mindrocks.functional.Functional;
+typedef Variable = {
+	name: String,
+	resolved: Bool,
+}
 
-class AST {
-	function base(): Float { return 0; }
-	function cost(): Float { return 0; }
-	function space(): Float { return 0; }
-	function kills(): Int { return 0; }
+typedef Mekton = {
+	name: String,
+	servos: Array<Servo>,
+}
+
+typedef Servo = {
+	sizeClass: SizeClass,
+	armor: Armor,
+	systems: Array<Variable>,
 }
