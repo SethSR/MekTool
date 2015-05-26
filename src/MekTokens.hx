@@ -7,11 +7,11 @@ class MekTokens {
 	static var retP   = '\r'.identifier().lazyF();
 	static var nlnP   = '\n'.identifier().lazyF();
 
-	static var identifierR = ~/[a-zA-Z0-9 \/_-]+/;
+	static var identifierR = ~/'(.+)'/;
 	static var numberR     = ~/[-+]?[0-9]*\.?[0-9]+/;
 	static var commentR    = ~/=.*/;
 
-	static var spacingP = [
+	static public var spacingP = [
 		spaceP,
 		tabP,
 		retP,
@@ -20,7 +20,7 @@ class MekTokens {
 	].ors().many().lazyF();
 
 	static function withSpacing<T>(p: Void -> Parser<String, T>): Void -> Parser<String, T> {
-		return spacingP._and(p);
+		return p.and_(spacingP);
 	}
 
 	static public var identifierP = withSpacing(identifierR.regexParser()).tag('identifier').lazyF();
