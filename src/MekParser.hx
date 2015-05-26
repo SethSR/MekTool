@@ -29,6 +29,8 @@ class MekParser {
 						trace ('cannot parse ' + remaining);
 					}
 					withResult(res);
+					trace (ast.mektons);
+					trace (ast.systems);
 				case Failure(err, rest, _):
 					var p = rest.textAround();
 					output(p.text);
@@ -143,7 +145,7 @@ class MekParser {
 		gammaT   .then(function (p) return ArmorClass.Gamma   ),
 	].ors().tag('Armor Class').lazyF();
 
-	static var declarationP = quoteT._and(identifierP.and_(quoteT)).lazyF();
+	static var declarationP = identifierP.then(function (p) return p.substring(1,p.length-1)).lazyF();
 
 	static var nameDeclP = colonT._and(declarationP).lazyF();
 
