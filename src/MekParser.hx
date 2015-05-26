@@ -70,7 +70,7 @@ class MekParser {
 		'electronic'  => new Map<String, MekSys>(),
 		'remote'      => new Map<String, MekSys>(),
 	];
-	static var resolved_mektons = new Array<Mekton>();
+	// static var resolved_mektons = new Array<Mekton>();
 
 	static function resolve(c: String, s: String, ms: MekSys) {
 		var mek_map = resolved_systems.get(c);
@@ -86,6 +86,11 @@ class MekParser {
 	static function p<T>(s: String): T -> String
 		return function (t: T) return 'parsed ' + s;
 
+	static var ast = {
+		mektons: new Array<AST_Mekton>(),
+		systems: new Array<AST_MekSys>(),
+	};
+
 
 	/************
 	 *  Parser  *
@@ -93,11 +98,11 @@ class MekParser {
 	static var fileP = definitionP.many().commit().lazyF();
 
 	static var definitionP = [
-		mektonDefP,
-		systemDefP,
+		mektonDefP.then(function (p) ast.mektons.push(AST_Mekton(p.a, p.b))),
+		systemDefP.then(function (p) ast.systems.push(p)),
 	].ors().lazyF();
 
-	static var mektonDefP = mektonT._and(nameDeclP).band(servoP.many()).trace(p('Mekton')).then(function (p) Mekton(p.a, p.b)).tag('Mekton').lazyF();
+	static var mektonDefP = mektonT._and(nameDeclP).band(servoP.many()).trace(p('Mekton')).tag('Mekton').lazyF();
 
 	static var servoP = [
 		sizeClassP.band(torsoT.trace(p('Torso'))._and(armorP.band(systemDeclP.many()))).then(function (p) return Torso(p.a, p.b.a, p.b.b)),
@@ -140,45 +145,30 @@ class MekParser {
 
 	static var nameDeclP = colonT._and(quoteT._and(identifierP.and_(quoteT))).lazyF();
 
-	static var beamDeclP        = quoteT._and(identifierP.and_(quoteT)).trace(p('Beam Declaration'        )).then(function (p) return Unresolved('beam'       , p)).lazyF();
-	static var energyMeleeDeclP = quoteT._and(identifierP.and_(quoteT)).trace(p('Energy Melee Declaration')).then(function (p) return Unresolved('energyMelee', p)).lazyF();
-	static var meleeDeclP       = quoteT._and(identifierP.and_(quoteT)).trace(p('Melee Declaration'       )).then(function (p) return Unresolved('melee'      , p)).lazyF();
-	static var missileDeclP     = quoteT._and(identifierP.and_(quoteT)).trace(p('Missile Declaration'     )).then(function (p) return Unresolved('missile'    , p)).lazyF();
-	static var projectileDeclP  = quoteT._and(identifierP.and_(quoteT)).trace(p('Projectile Declaration'  )).then(function (p) return Unresolved('projectile' , p)).lazyF();
-	static var energyPoolDeclP  = quoteT._and(identifierP.and_(quoteT)).trace(p('Energy Pool Declaration' )).then(function (p) return Unresolved('energyPool' , p)).lazyF();
-
-	static var ammoDeclP      = quoteT._and(identifierP.and_(quoteT)).trace(p('Ammo Declaration'              )).then(function (p) return Unresolved('ammo'      , p)).lazyF();
-	static var matedDeclP     = quoteT._and(identifierP.and_(quoteT)).trace(p('Mated System Declaration'      )).then(function (p) return Unresolved('mated'     , p)).lazyF();
-	static var shieldDeclP    = quoteT._and(identifierP.and_(quoteT)).trace(p('Shield Declaration'            )).then(function (p) return Unresolved('shield'    , p)).lazyF();
-	static var reflectorDeclP = quoteT._and(identifierP.and_(quoteT)).trace(p('Reflector Declaration'         )).then(function (p) return Unresolved('reflector' , p)).lazyF();
-	static var sensorDeclP    = quoteT._and(identifierP.and_(quoteT)).trace(p('Sensor Declaration'            )).then(function (p) return Unresolved('sensor'    , p)).lazyF();
-	static var elecWarDeclP   = quoteT._and(identifierP.and_(quoteT)).trace(p('Electronic Warfare Declaration')).then(function (p) return Unresolved('electronic', p)).lazyF();
-	static var remoteDeclP    = quoteT._and(identifierP.and_(quoteT)).trace(p('Remote Control Declaration'    )).then(function (p) return Unresolved('remote'    , p)).lazyF();
-
 	static var systemDeclP = [
-		weaponDeclP               ,
-		ammoDeclP                 ,
-		matedDeclP                ,
-		shieldDeclP               ,
-		reflectorDeclP            ,
-		sensorDeclP               ,
-		elecWarDeclP              ,
-		remoteDeclP               ,
-		mountDeclP                ,
-		handDeclP                 ,
-		crewDeclP                 ,
-		reconSysDeclP             ,
-		optionDeclP               ,
+		weaponDeclP   ,
+		// ammoDeclP     ,
+		// matedDeclP    ,
+		// shieldDeclP   ,
+		// reflectorDeclP,
+		// sensorDeclP   ,
+		// elecWarDeclP  ,
+		// remoteDeclP   ,
+		mountDeclP    ,
+		handDeclP     ,
+		crewDeclP     ,
+		reconSysDeclP ,
+		optionDeclP   ,
 	].ors().lazyF();
 
 	static var weaponDeclP = [
-		beamDeclP       .trace(p('Beam')),
-		energyMeleeDeclP.trace(p('EnergyMelee')),
-		meleeDeclP      .trace(p('Melee')),
-		missileDeclP    .trace(p('Missile')),
-		projectileDeclP .trace(p('Projectile')),
-		energyPoolDeclP .trace(p('EnergyPool')),
-	].ors().lazyF();
+		nameDeclP.trace(p('Beam')       ),
+		nameDeclP.trace(p('EnergyMelee')),
+		nameDeclP.trace(p('Melee')      ),
+		nameDeclP.trace(p('Missile')    ),
+		nameDeclP.trace(p('Projectile') ),
+		nameDeclP.trace(p('EnergyPool') ),
+	].ors().then(function (p) return Unresolved(p)).lazyF();
 
 	static var mountDeclP = [
 		mountT._and(mountSystemP).band(systemPropP.many()).trace(p('Mount')).then(function (p) return Resolved(Mount(p.a , p.b))),
@@ -187,13 +177,13 @@ class MekParser {
 
 	static var mountSystemP = [
 		weaponDeclP   .trace(p('Weapon')),
-		ammoDeclP     .trace(p('Ammo')),
-		matedDeclP    .trace(p('Mated')),
-		shieldDeclP   .trace(p('Shield')),
-		reflectorDeclP.trace(p('Reflector')),
-		sensorDeclP   .trace(p('Sensor')),
-		elecWarDeclP  .trace(p('ElecWar')),
-		remoteDeclP   .trace(p('Remote')),
+		// nameDeclP     .trace(p('Ammo')),
+		// nameDeclP    .trace(p('Mated')),
+		// nameDeclP   .trace(p('Shield')),
+		// nameDeclP.trace(p('Reflector')),
+		// nameDeclP   .trace(p('Sensor')),
+		// nameDeclP  .trace(p('ElecWar')),
+		// nameDeclP   .trace(p('Remote')),
 		crewDeclP     .trace(p('Crew')),
 		reconSysDeclP .trace(p('ReconSys')),
 		optionDeclP   .trace(p('Option')),
@@ -234,13 +224,13 @@ class MekParser {
 
 	static var handSystemP = [
 		weaponDeclP   ,
-		ammoDeclP     ,
-		matedDeclP    ,
-		shieldDeclP   ,
-		reflectorDeclP,
-		sensorDeclP   ,
-		elecWarDeclP  ,
-		remoteDeclP   ,
+		// ammoDeclP     ,
+		// matedDeclP    ,
+		// shieldDeclP   ,
+		// reflectorDeclP,
+		// sensorDeclP   ,
+		// elecWarDeclP  ,
+		// remoteDeclP   ,
 		crewDeclP     ,
 		reconSysDeclP ,
 		optionDeclP   ,
@@ -259,7 +249,7 @@ class MekParser {
 
 	static var energyPoolSystemP = [
 		weaponDeclP,
-		shieldDeclP,
+		// shieldDeclP,
 	].ors().lazyF();
 
 	static var systemDefP = [
@@ -282,23 +272,42 @@ class MekParser {
 		energyPoolDefP,
 	].ors().lazyF();
 
-	static var beamDefP        = beamT._and(nameDeclP.band(damagePropP.band(beamPropP.many())))                      .trace(p('')).then(function (p) { p.b.b.push(p.b.a); return resolve('beam'       , p.a, Beam       (p.a, p.b.b)); }).lazyF();
-	static var energyMeleeDefP = energyT._and(meleeT._and(nameDeclP.band(damagePropP.band(energyMeleePropP.many())))).trace(p('')).then(function (p) { p.b.b.push(p.b.a); return resolve('energyMelee', p.a, EnergyMelee(p.a, p.b.b)); }).lazyF();
-	static var meleeDefP       = meleeT._and(nameDeclP.band(damagePropP.band(meleePropP.many())))                    .trace(p('')).then(function (p) { p.b.b.push(p.b.a); return resolve('melee'      , p.a, Melee      (p.a, p.b.b)); }).lazyF();
-	static var missileDefP     = missileT._and(nameDeclP.band(damagePropP.band(missilePropP.many())))                .trace(p('')).then(function (p) { p.b.b.push(p.b.a); return resolve('missile'    , p.a, Missile    (p.a, p.b.b)); }).lazyF();
-	static var projectileDefP  = projectileT._and(nameDeclP.band(damagePropP.band(projectilePropP.many())))          .trace(p('')).then(function (p) { p.b.b.push(p.b.a); return resolve('projectile' , p.a, Projectile (p.a, p.b.b)); }).lazyF();
-	static var energyPoolDefP  = energyT._and(poolT._and(nameDeclP.band(powerPropP.band(energyPoolPropP.many().band(energyPoolSystemP.many())))))   .trace(p('')).then(function (p) { p.b.b.a.push(p.b.a); return resolve('energyPool' , p.a, EnergyPool (p.a, p.b.b.a, p.b.b.b)); }).lazyF();
+	static var beamDefP        = beamT._and(nameDeclP.band(damagePropP.band(beamPropP.many())))                      .trace(p('')).then(function (p) return Beam       (p.a, p.b.b)).lazyF();
+	static var energyMeleeDefP = energyT._and(meleeT._and(nameDeclP.band(damagePropP.band(energyMeleePropP.many())))).trace(p('')).then(function (p) return EnergyMelee(p.a, p.b.b)).lazyF();
+	static var meleeDefP       = meleeT._and(nameDeclP.band(damagePropP.band(meleePropP.many())))                    .trace(p('')).then(function (p) return Melee      (p.a, p.b.b)).lazyF();
+	static var missileDefP     = missileT._and(nameDeclP.band(damagePropP.band(missilePropP.many())))                .trace(p('')).then(function (p) return Missile    (p.a, p.b.b)).lazyF();
+	static var projectileDefP  = projectileT._and(nameDeclP.band(damagePropP.band(projectilePropP.many())))          .trace(p('')).then(function (p) return Projectile (p.a, p.b.b)).lazyF();
+	static var energyPoolDefP  = energyT._and(poolT._and(nameDeclP.band(powerPropP.band(energyPoolPropP.many().band(energyPoolSystemP.many()))))).trace(p('')).then(function (p) return EnergyPool (p.a, p.b.b.a, p.b.b.b)).lazyF();
 
-	static var ammoDefP          = ammoT._and(nameDeclP).band(ammoPropP.many())                                           .trace(p('')).then(function (p) trace ('Parsing an ammo definition'         )).lazyF();
-	static var matedSystemDefP   = matedT._and(nameDeclP).band(systemPropP.many()).band(systemDeclP).band(systemDeclP)    .trace(p('')).then(function (p) trace ('Parsing a mated system'             )).lazyF();
-	static var reflectorDefP     = reflectorT._and(nameDeclP).band(qualityValuePropP).band(systemPropP.many())            .trace(p('')).then(function (p) trace ('Parsing a reflector definition'     )).lazyF();
-	static var sensorDefP        = sizeClassP.band(sensorT._and(nameDeclP)).band(sensorPropP.many())                      .trace(p('')).then(function (p) trace ('Parsing a sensor definition'        )).lazyF();
-	static var elecWarDefP       = ecmTypeP.band(nameDeclP).band(valuePropP).band(ecmPropP.many())                        .trace(p('')).then(function (p) trace ('Parsing an ECM definition'          )).lazyF();
-	static var remoteControlDefP = sizeClassP.band(remoteT._and(controlT)._and(nameDeclP)).band(remoteControlPropP.many()).trace(p('')).then(function (p) trace ('Parsing a remote control definition')).lazyF();
+	static var ammoDefP          = ammoT._and(nameDeclP).band(ammoPropP.many())                                           .trace(p('')).then(function (p) return Ammo       (p.a, p.b)).lazyF();
+	static var matedSystemDefP   = matedT._and(nameDeclP.band(systemPropP.many().band(systemDeclP.band(systemDeclP))))    .trace(p('')).then(function (p) return MatedSystem(p.a, [p.b.b.a, p.b.b.b], p.b.a)).lazyF();
+	static var reflectorDefP     = reflectorT._and(nameDeclP.band(qualityValuePropP.band(systemPropP.many())))            .trace(p('')).then(function (p) { p.b.b.push(p.b.a); return Reflector  (p.a, p.b.b); }).lazyF();
+	static var sensorDefP        = sizeClassP.band(sensorT._and(nameDeclP.band(sensorPropP.many())))                      .trace(p('')).then(function (p) return Sensor     (p.b.a, p.a, p.b.b)).lazyF();
+	static var elecWarDefP       = [
+		sensorT._and(ecmT) ._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).trace(p('Sensor ECM' )).then(function (p) { p.b.b.push(p.b.a); return SensorECM (p.a, p.b.b); }),
+		missileT._and(ecmT)._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).trace(p('Missile ECM')).then(function (p) { p.b.b.push(p.b.a); return MissileECM(p.a, p.b.b); }),
+		radarT._and(ecmT)  ._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).trace(p('Radar ECM'  )).then(function (p) { p.b.b.push(p.b.a); return RadarECM  (p.a, p.b.b); }),
+		eccmT              ._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).trace(p('Counter ECM')).then(function (p) { p.b.b.push(p.b.a); return CounterECM(p.a, p.b.b); }),
+	].ors().lazyF();
+	static var remoteControlDefP = sizeClassP.band(remoteT._and(controlT)._and(nameDeclP).band(remoteControlPropP.many())).trace(p('')).then(function (p) return RemoteControl(p.b.a, p.a, p.b.b)).lazyF();
 
 	static var shieldDefP = [
-		shieldTypeP.option().band(armorClassP.option()).band(sizeClassP).and_(shieldT).band(nameDeclP).band(shieldPropP.many()).trace(p('')).then(function (p) trace ('Parsing a shield definition')),
-		shieldTypeP.option().band(armorClassP.option()).band(sizeClassP).and_(shieldT).band(shieldPropP.many())                .trace(p('')).then(function (p) trace ('Parsing a shield definition')),
+		standardT._and(armorClassP.option().band(sizeClassP.and_(shieldT))).band(nameDeclP.band(shieldPropP.many())).trace(p('Standard Shield')).then(function (p) return StandardShield(Some(p.b.a), p.a.a, p.a.b, p.b.b)),
+		activeT  ._and(armorClassP.option().band(sizeClassP.and_(shieldT))).band(nameDeclP.band(shieldPropP.many())).trace(p('Active Shield'  )).then(function (p) return ActiveShield  (Some(p.b.a), p.a.a, p.a.b, p.b.b)),
+		reactiveT._and(armorClassP.option().band(sizeClassP.and_(shieldT))).band(nameDeclP.band(shieldPropP.many())).trace(p('Reactive Shield')).then(function (p) return ReactiveShield(Some(p.b.a), p.a.a, p.a.b, p.b.b)),
+		               armorClassP.option().band(sizeClassP.and_(shieldT)) .band(nameDeclP.band(shieldPropP.many())).trace(p('Standard Shield')).then(function (p) return StandardShield(Some(p.b.a), p.a.a, p.a.b, p.b.b)),
+	].ors().lazyF();
+
+	static var shieldNoNameDefP = [
+		standardT.option().band(armorClassP.option().band(sizeClassP.and_(shieldT))).band(shieldPropP.many()).trace(p('Standard Shield')).then(function (p) trace ('Parsing a shield definition')),
+		activeT  .option().band(armorClassP.option().band(sizeClassP.and_(shieldT))).band(shieldPropP.many()).trace(p('Active Shield'  )).then(function (p) trace ('Parsing a shield definition')),
+		reactiveT.option().band(armorClassP.option().band(sizeClassP.and_(shieldT))).band(shieldPropP.many()).trace(p('Reactive Shield')).then(function (p) trace ('Parsing a shield definition')),
+	].ors().lazyF();
+
+	static var shieldTypeP = [
+		standardT,
+		activeT,
+		reactiveT,
 	].ors().lazyF();
 
 
@@ -392,8 +401,8 @@ class MekParser {
 	].ors().lazyF();
 
 	static var powerPropP = [
-		numberP.and_(powerT) .trace(p('')).then(function (p) return Property.Power(Std.parseInt(p))),
-		batteryT.and_(powerT).trace(p('')).then(function (p) return Property.Power(-1)             ),
+		numberP.and_(powerT) .trace(p('')).then(function (p) return AST_Power(Std.parseInt(p))),
+		batteryT.and_(powerT).trace(p('')).then(function (p) return AST_Power(-1)             ),
 	].ors().lazyF();
 
 	static var energyPoolPropP = [
@@ -418,12 +427,6 @@ class MekParser {
 		nuclearPropP,
 	].ors().lazyF();
 
-	static var shieldTypeP = [
-		standardT,
-		activeT,
-		reactiveT,
-	].ors().lazyF();
-
 	static var shieldPropP = [
 		systemPropP,
 		stoppingPowerPropP,
@@ -435,25 +438,18 @@ class MekParser {
 	].ors().lazyF();
 
 	static var weaknessPropP = [
-		ablativeT.or(screenT)                 .trace(p('')).then(function (p) return Property.Screen       ),
-		energyT._and(onlyT).or(interferenceT) .trace(p('')).then(function (p) return Property.Interference ),
-		matterT._and(onlyT).or(kineticT)      .trace(p('')).then(function (p) return Property.Kinetic      ),
-		rangedT._and(onlyT).or(swashbucklingT).trace(p('')).then(function (p) return Property.Swashbuckling),
-		enclosingT.or(mirrorT)                .trace(p('')).then(function (p) return Property.Mirror       ),
-		offensiveT.or(surgeT)                 .trace(p('')).then(function (p) return Property.Surge        ),
+		ablativeT.or(screenT)                 .trace(p('')).then(function (p) return Resolved(AST_Screen       )),
+		energyT._and(onlyT).or(interferenceT) .trace(p('')).then(function (p) return Resolved(AST_Interference )),
+		matterT._and(onlyT).or(kineticT)      .trace(p('')).then(function (p) return Resolved(AST_Kinetic      )),
+		rangedT._and(onlyT).or(swashbucklingT).trace(p('')).then(function (p) return Resolved(AST_Swashbuckling)),
+		enclosingT.or(mirrorT)                .trace(p('')).then(function (p) return Resolved(AST_Mirror       )),
+		offensiveT.or(surgeT)                 .trace(p('')).then(function (p) return Resolved(AST_Surge        )),
 	].ors().lazyF();
 
 	static var sensorPropP = [
 		systemPropP,
 		sensorRangePropP,
 		commRangePropP,
-	].ors().lazyF();
-
-	static var ecmTypeP = [
-		sensorT._and(ecmT),
-		missileT._and(ecmT),
-		radarT._and(ecmT),
-		eccmT,
 	].ors().lazyF();
 
 	static var ecmPropP = [
@@ -481,168 +477,172 @@ class MekParser {
 		case None   : return false;
 	}
 
-	static var accuracyPropP       = numberP.and_(accuracyT)                                                  .trace(p('')).then(function (p) return Resolved(Property.Accuracy(Std.parseInt(p))                        )).lazyF();
-	static var allPurposePropP     = allPurposeT                                                              .trace(p('')).then(function (p) return Resolved(Property.AllPurpose                                       )).lazyF();
-	static var antiMissilePropP    = variableT.option().and_(antiMissileT)                                    .trace(p('')).then(function (p) return Resolved(Property.AntiMissile(propSwitch(p))                       )).lazyF();
-	static var antiPersonnelPropP  = variableT.option().and_(antiPersonnelT)                                  .trace(p('')).then(function (p) return Resolved(Property.AntiPersonnel(propSwitch(p))                     )).lazyF();
-	static var armorPiercingPropP  = armorPiercingT                                                           .trace(p('')).then(function (p) return Resolved(Property.ArmorPiercing                                    )).lazyF();
-	static var attackFactorPropP   = numberP.and_(attackT).and_(factorT)                                      .trace(p('')).then(function (p) return Resolved(Property.AttackFactor(Std.parseInt(p))                    )).lazyF();
-	static var beamingPropP        = numberP.and_(beamingT)                                                   .trace(p('')).then(function (p) return Resolved(Property.Beaming(Std.parseInt(p))                         )).lazyF();
-	static var beamShieldPropP     = variableT.option().and_(beamT).and_(shieldT)                             .trace(p('')).then(function (p) return Resolved(Property.BeamShield(propSwitch(p))                        )).lazyF();
-	static var binderSpacePropP    = dashT._and(numberP.band(slashT._and(numberP))).and_(binderT.band(spaceT)).trace(p('')).then(function (p) return Resolved(Property.BinderSpace(Std.parseInt(p.a), Std.parseInt(p.b)))).lazyF();
-	static var blastPropP          = blastT._and(numberP)                                                     .trace(p('')).then(function (p) return Resolved(Property.Blast(Std.parseInt(p))                           )).lazyF();
-	static var burstValuePropP     = numberP.and_(burstT).and_(valueT)                                        .trace(p('')).then(function (p) return Resolved(Property.BurstValue(Std.parseInt(p))                      )).lazyF();
-	static var clipFedPropP        = clipFedT                                                                 .trace(p('')).then(function (p) return Resolved(Property.ClipFed                                          )).lazyF();
-	static var clumsyPropP         = clumsyT                                                                  .trace(p('')).then(function (p) return Resolved(Property.Clumsy                                           )).lazyF();
-	static var commRangePropP      = numberP.and_(kmT.band(commT).band(rangeT))                               .trace(p('')).then(function (p) return Resolved(Property.CommRange(Std.parseInt(p))                       )).lazyF();
-	static var controlRangePropP   = numberP.and_(controlT).and_(rangeT)                                      .trace(p('')).then(function (p) return Resolved(Property.ControlRange(Std.parseInt(p))                    )).lazyF();
-	static var costPropP           = numberP.and_(costT)                                                      .trace(p('')).then(function (p) return Resolved(Property.Cost(Std.parseFloat(p))                          )).lazyF();
-	static var countermissilePropP = variableT.option().and_(countermissileT)                                 .trace(p('')).then(function (p) return Resolved(Property.Countermissile(propSwitch(p))                    )).lazyF();
-	static var damagePropP         = numberP.and_(damageT)                                                    .trace(p('')).then(function (p) return Resolved(Property.Damage(Std.parseFloat(p))                        )).lazyF();
-	static var defenseAbilityPropP = numberP.and_(defenseT).and_(abilityT)                                    .trace(p('')).then(function (p) return Resolved(Property.DefenseAbility(Std.parseInt(p))                  )).lazyF();
-	static var disruptorPropP      = disruptorT                                                               .trace(p('')).then(function (p) return Resolved(Property.Disruptor                                        )).lazyF();
-	static var entanglePropP       = entangleT                                                                .trace(p('')).then(function (p) return Resolved(Property.Entangle                                         )).lazyF();
-	static var flarePropP          = flareT                                                                   .trace(p('')).then(function (p) return Resolved(Property.Flare                                            )).lazyF();
-	static var foamPropP           = foamT                                                                    .trace(p('')).then(function (p) return Resolved(Property.Foam                                             )).lazyF();
-	static var fragilePropP        = fragileT                                                                 .trace(p('')).then(function (p) return Resolved(Property.Fragile                                          )).lazyF();
-	static var fusePropP           = fuseT                                                                    .trace(p('')).then(function (p) return Resolved(Property.Fuse                                             )).lazyF();
-	static var handyPropP          = handyT                                                                   .trace(p('')).then(function (p) return Resolved(Property.Handy                                            )).lazyF();
-	static var highExPropP         = highExplosiveT                                                           .trace(p('')).then(function (p) return Resolved(Property.HighEx                                           )).lazyF();
-	static var hydroPropP          = hydroT                                                                   .trace(p('')).then(function (p) return Resolved(Property.Hydro                                            )).lazyF();
-	static var hyperPropP          = hyperT                                                                   .trace(p('')).then(function (p) return Resolved(Property.Hyper                                            )).lazyF();
-	static var hypervelocityPropP  = hypervelocityT                                                           .trace(p('')).then(function (p) return Resolved(Property.Hypervelocity                                    )).lazyF();
-	static var incendiaryPropP     = incendiaryT                                                              .trace(p('')).then(function (p) return Resolved(Property.Incendiary                                       )).lazyF();
-	static var killsPropP          = numberP.and_(killsT)                                                     .trace(p('')).then(function (p) return Resolved(Property.Kills(Std.parseFloat(p))                         )).lazyF();
-	static var kineticPropP        = kineticT                                                                 .trace(p('')).then(function (p) return Resolved(Property.Kinetic                                          )).lazyF();
-	static var longRangePropP      = longT.band(rangeT)                                                       .trace(p('')).then(function (p) return Resolved(Property.LongRange                                        )).lazyF();
-	static var megaBeamPropP       = megaBeamT                                                                .trace(p('')).then(function (p) return Resolved(Property.MegaBeam                                         )).lazyF();
-	static var morphablePropP      = morphableT                                                               .trace(p('')).then(function (p) return Resolved(Property.Morphable                                        )).lazyF();
-	static var multiFeedPropP      = numberP.and_(multiFeedT)                                                 .trace(p('')).then(function (p) return Resolved(Property.MultiFeed(Std.parseInt(p))                       )).lazyF();
-	static var nuclearPropP        = nuclearT                                                                 .trace(p('')).then(function (p) return Resolved(Property.Nuclear                                          )).lazyF();
-	static var operationRangePropP = numberP.and_(operationT).and_(rangeT)                                    .trace(p('')).then(function (p) return Resolved(Property.OperationRange(Std.parseInt(p))                  )).lazyF();
-	static var paintballPropP      = paintballT                                                               .trace(p('')).then(function (p) return Resolved(Property.Paintball                                        )).lazyF();
-	static var phalanxPropP        = variableT.option().and_(phalanxT)                                        .trace(p('')).then(function (p) return Resolved(Property.Phalanx(propSwitch(p))                           )).lazyF();
-	static var projAmmoPropP       = ammoT._and(ammoDeclP.many())                                             .trace(p('')).then(function (p) return Resolved(AST_Ammo(p)                                               )).lazyF();
-	static var qualityValuePropP   = numberP.and_(qualityT).and_(valueT)                                      .trace(p('')).then(function (p) return Resolved(Property.QualityValue(Std.parseInt(p))                    )).lazyF();
-	static var quickPropP          = quickT                                                                   .trace(p('')).then(function (p) return Resolved(Property.Quick                                            )).lazyF();
-	static var radiusPropP         = numberP.and_(radiusT)                                                    .trace(p('')).then(function (p) return Resolved(Property.Radius(Std.parseInt(p))                          )).lazyF();
-	static var rangePropP          = numberP.and_(rangeT)                                                     .trace(p('')).then(function (p) return Resolved(Property.Range(Std.parseInt(p))                           )).lazyF();
-	static var rechargeablePropP   = rechargeableT                                                            .trace(p('')).then(function (p) return Resolved(Property.Rechargeable                                     )).lazyF();
-	static var resetPropP          = numberP.and_(resetT)                                                     .trace(p('')).then(function (p) return Resolved(Property.Reset(Std.parseInt(p))                           )).lazyF();
-	static var returningPropP      = returningT                                                               .trace(p('')).then(function (p) return Resolved(Property.Returning                                        )).lazyF();
-	static var scatterPropP        = scatterT                                                                 .trace(p('')).then(function (p) return Resolved(Property.Scatter                                          )).lazyF();
-	static var scattershotPropP    = scattershotT                                                             .trace(p('')).then(function (p) return Resolved(Property.Scattershot                                      )).lazyF();
-	static var sensorRangePropP    = numberP.and_(kmT.band(sensorT).band(rangeT))                             .trace(p('')).then(function (p) return Resolved(Property.SensorRange(Std.parseInt(p))                     )).lazyF();
-	static var shockPropP          = shockT._and(onlyT.or(addedT)).or(shockT)                                 .trace(p('')).then(function (p) return Resolved(Property.Shock(switch (p) {
+	static var accuracyPropP       = numberP.and_(accuracyT)                                                  .trace(p('')).then(function (p) return Resolved(AST_Accuracy(Std.parseInt(p))                        )).lazyF();
+	static var allPurposePropP     = allPurposeT                                                              .trace(p('')).then(function (p) return Resolved(AST_AllPurpose                                       )).lazyF();
+	static var antiMissilePropP    = variableT.option().and_(antiMissileT)                                    .trace(p('')).then(function (p) return Resolved(AST_AntiMissile(propSwitch(p))                       )).lazyF();
+	static var antiPersonnelPropP  = variableT.option().and_(antiPersonnelT)                                  .trace(p('')).then(function (p) return Resolved(AST_AntiPersonnel(propSwitch(p))                     )).lazyF();
+	static var armorPiercingPropP  = armorPiercingT                                                           .trace(p('')).then(function (p) return Resolved(AST_ArmorPiercing                                    )).lazyF();
+	static var attackFactorPropP   = numberP.and_(attackT).and_(factorT)                                      .trace(p('')).then(function (p) return Resolved(AST_AttackFactor(Std.parseInt(p))                    )).lazyF();
+	static var beamingPropP        = numberP.and_(beamingT)                                                   .trace(p('')).then(function (p) return Resolved(AST_Beaming(Std.parseInt(p))                         )).lazyF();
+	static var beamShieldPropP     = variableT.option().and_(beamT).and_(shieldT)                             .trace(p('')).then(function (p) return Resolved(AST_BeamShield(propSwitch(p))                        )).lazyF();
+	static var binderSpacePropP    = dashT._and(numberP.band(slashT._and(numberP))).and_(binderT.band(spaceT)).trace(p('')).then(function (p) return Resolved(AST_BinderSpace(Std.parseInt(p.a), Std.parseInt(p.b)))).lazyF();
+	static var blastPropP          = blastT._and(numberP)                                                     .trace(p('')).then(function (p) return Resolved(AST_Blast(Std.parseInt(p))                           )).lazyF();
+	static var burstValuePropP     = numberP.and_(burstT).and_(valueT)                                        .trace(p('')).then(function (p) return Resolved(AST_BurstValue(Std.parseInt(p))                      )).lazyF();
+	static var clipFedPropP        = clipFedT                                                                 .trace(p('')).then(function (p) return Resolved(AST_ClipFed                                          )).lazyF();
+	static var clumsyPropP         = clumsyT                                                                  .trace(p('')).then(function (p) return Resolved(AST_Clumsy                                           )).lazyF();
+	static var commRangePropP      = numberP.and_(kmT.band(commT).band(rangeT))                               .trace(p('')).then(function (p) return Resolved(AST_CommRange(Std.parseInt(p))                       )).lazyF();
+	static var controlRangePropP   = numberP.and_(controlT).and_(rangeT)                                      .trace(p('')).then(function (p) return Resolved(AST_ControlRange(Std.parseInt(p))                    )).lazyF();
+	static var costPropP           = numberP.and_(costT)                                                      .trace(p('')).then(function (p) return Resolved(AST_Cost(Std.parseFloat(p))                          )).lazyF();
+	static var countermissilePropP = variableT.option().and_(countermissileT)                                 .trace(p('')).then(function (p) return Resolved(AST_Countermissile(propSwitch(p))                    )).lazyF();
+	static var damagePropP         = numberP.and_(damageT)                                                    .trace(p('')).then(function (p) return Resolved(AST_Damage(Std.parseFloat(p))                        )).lazyF();
+	static var defenseAbilityPropP = numberP.and_(defenseT).and_(abilityT)                                    .trace(p('')).then(function (p) return Resolved(AST_DefenseAbility(Std.parseInt(p))                  )).lazyF();
+	static var disruptorPropP      = disruptorT                                                               .trace(p('')).then(function (p) return Resolved(AST_Disruptor                                        )).lazyF();
+	static var entanglePropP       = entangleT                                                                .trace(p('')).then(function (p) return Resolved(AST_Entangle                                         )).lazyF();
+	static var flarePropP          = flareT                                                                   .trace(p('')).then(function (p) return Resolved(AST_Flare                                            )).lazyF();
+	static var foamPropP           = foamT                                                                    .trace(p('')).then(function (p) return Resolved(AST_Foam                                             )).lazyF();
+	static var fragilePropP        = fragileT                                                                 .trace(p('')).then(function (p) return Resolved(AST_Fragile                                          )).lazyF();
+	static var fusePropP           = fuseT                                                                    .trace(p('')).then(function (p) return Resolved(AST_Fuse                                             )).lazyF();
+	static var handyPropP          = handyT                                                                   .trace(p('')).then(function (p) return Resolved(AST_Handy                                            )).lazyF();
+	static var highExPropP         = highExplosiveT                                                           .trace(p('')).then(function (p) return Resolved(AST_HighEx                                           )).lazyF();
+	static var hydroPropP          = hydroT                                                                   .trace(p('')).then(function (p) return Resolved(AST_Hydro                                            )).lazyF();
+	static var hyperPropP          = hyperT                                                                   .trace(p('')).then(function (p) return Resolved(AST_Hyper                                            )).lazyF();
+	static var hypervelocityPropP  = hypervelocityT                                                           .trace(p('')).then(function (p) return Resolved(AST_Hypervelocity                                    )).lazyF();
+	static var incendiaryPropP     = incendiaryT                                                              .trace(p('')).then(function (p) return Resolved(AST_Incendiary                                       )).lazyF();
+	static var killsPropP          = numberP.and_(killsT)                                                     .trace(p('')).then(function (p) return Resolved(AST_Kills(Std.parseFloat(p))                         )).lazyF();
+	static var kineticPropP        = kineticT                                                                 .trace(p('')).then(function (p) return Resolved(AST_Kinetic                                          )).lazyF();
+	static var longRangePropP      = longT.band(rangeT)                                                       .trace(p('')).then(function (p) return Resolved(AST_LongRange                                        )).lazyF();
+	static var megaBeamPropP       = megaBeamT                                                                .trace(p('')).then(function (p) return Resolved(AST_MegaBeam                                         )).lazyF();
+	static var morphablePropP      = morphableT                                                               .trace(p('')).then(function (p) return Resolved(AST_Morphable                                        )).lazyF();
+	static var multiFeedPropP      = numberP.and_(multiFeedT)                                                 .trace(p('')).then(function (p) return Resolved(AST_MultiFeed(Std.parseInt(p))                       )).lazyF();
+	static var nuclearPropP        = nuclearT                                                                 .trace(p('')).then(function (p) return Resolved(AST_Nuclear                                          )).lazyF();
+	static var operationRangePropP = numberP.and_(operationT).and_(rangeT)                                    .trace(p('')).then(function (p) return Resolved(AST_OperationRange(Std.parseInt(p))                  )).lazyF();
+	static var paintballPropP      = paintballT                                                               .trace(p('')).then(function (p) return Resolved(AST_Paintball                                        )).lazyF();
+	static var phalanxPropP        = variableT.option().and_(phalanxT)                                        .trace(p('')).then(function (p) return Resolved(AST_Phalanx(propSwitch(p))                           )).lazyF();
+	static var projAmmoPropP       = ammoT._and(nameDeclP.many())                                             .trace(p('')).then(function (p) return Resolved(AST_Ammo(p)                                               )).lazyF();
+	static var qualityValuePropP   = numberP.and_(qualityT).and_(valueT)                                      .trace(p('')).then(function (p) return Resolved(AST_QualityValue(Std.parseInt(p))                    )).lazyF();
+	static var quickPropP          = quickT                                                                   .trace(p('')).then(function (p) return Resolved(AST_Quick                                            )).lazyF();
+	static var radiusPropP         = numberP.and_(radiusT)                                                    .trace(p('')).then(function (p) return Resolved(AST_Radius(Std.parseInt(p))                          )).lazyF();
+	static var rangePropP          = numberP.and_(rangeT)                                                     .trace(p('')).then(function (p) return Resolved(AST_Range(Std.parseInt(p))                           )).lazyF();
+	static var rechargeablePropP   = rechargeableT                                                            .trace(p('')).then(function (p) return Resolved(AST_Rechargeable                                     )).lazyF();
+	static var resetPropP          = numberP.and_(resetT)                                                     .trace(p('')).then(function (p) return Resolved(AST_Reset(Std.parseInt(p))                           )).lazyF();
+	static var returningPropP      = returningT                                                               .trace(p('')).then(function (p) return Resolved(AST_Returning                                        )).lazyF();
+	static var scatterPropP        = scatterT                                                                 .trace(p('')).then(function (p) return Resolved(AST_Scatter                                          )).lazyF();
+	static var scattershotPropP    = scattershotT                                                             .trace(p('')).then(function (p) return Resolved(AST_Scattershot                                      )).lazyF();
+	static var sensorRangePropP    = numberP.and_(kmT.band(sensorT).band(rangeT))                             .trace(p('')).then(function (p) return Resolved(AST_SensorRange(Std.parseInt(p))                     )).lazyF();
+	static var shockPropP          = shockT._and(onlyT.or(addedT)).or(shockT)                                 .trace(p('')).then(function (p) return Resolved(AST_Shock(switch (p) {
 																																																																																		case 'Only' : true;
 																																																																																		case _      : false;
 																																																																																	})                                                  )).lazyF();
-	static var shotsPropP          = numberP.and_(shotsT)                                                     .trace(p('')).then(function (p) return Resolved(Property.Shots(Std.parseInt(p))                           )).lazyF();
-	static var skillPropP          = numberP.and_(skillT)                                                     .trace(p('')).then(function (p) return Resolved(Property.Skill(Std.parseInt(p))                           )).lazyF();
-	static var smartPropP          = numberP.and_(smartT)                                                     .trace(p('')).then(function (p) return Resolved(Property.Smart(Std.parseInt(p))                           )).lazyF();
-	static var smokePropP          = smokeT                                                                   .trace(p('')).then(function (p) return Resolved(Property.Smoke                                            )).lazyF();
-	static var spacePropP          = numberP.and_(spaceT)                                                     .trace(p('')).then(function (p) return Resolved(Property.Space(Std.parseFloat(p))                         )).lazyF();
-	static var stoppingPowerPropP  = numberP.and_(stoppingT).and_(powerT)                                     .trace(p('')).then(function (p) return Resolved(Property.StoppingPower(Std.parseInt(p))                   )).lazyF();
-	static var tanglerPropP        = tanglerT                                                                 .trace(p('')).then(function (p) return Resolved(Property.Tangler                                          )).lazyF();
-	static var thrownPropP         = thrownT                                                                  .trace(p('')).then(function (p) return Resolved(Property.Thrown                                           )).lazyF();
-	static var tracerPropP         = tracerT                                                                  .trace(p('')).then(function (p) return Resolved(Property.Tracer                                           )).lazyF();
-	static var turnsInUsePropP     = numberP.and_(turnsT).and_(inT).and_(useT)                                .trace(p('')).then(function (p) return Resolved(Property.TurnsInUse(Std.parseInt(p))                      )).lazyF();
-	static var valuePropP          = numberP.and_(valueT)                                                     .trace(p('')).then(function (p) return Resolved(Property.Value(Std.parseInt(p))                           )).lazyF();
-	static var warmUpPropP         = numberP.and_(warmUpT)                                                    .trace(p('')).then(function (p) return Resolved(Property.WarmUp(Std.parseInt(p))                          )).lazyF();
-	static var wideAnglePropP      = numberP.and_(wideT).and_(angleT)                                         .trace(p('')).then(function (p) return Resolved(Property.WideAngle(Std.parseInt(p))                       )).lazyF();
-	static var wireControlledPropP = wireControlledT                                                          .trace(p('')).then(function (p) return Resolved(Property.WireControlled                                   )).lazyF();
+	static var shotsPropP          = numberP.and_(shotsT)                                                     .trace(p('')).then(function (p) return Resolved(AST_Shots(Std.parseInt(p))                           )).lazyF();
+	static var skillPropP          = numberP.and_(skillT)                                                     .trace(p('')).then(function (p) return Resolved(AST_Skill(Std.parseInt(p))                           )).lazyF();
+	static var smartPropP          = numberP.and_(smartT)                                                     .trace(p('')).then(function (p) return Resolved(AST_Smart(Std.parseInt(p))                           )).lazyF();
+	static var smokePropP          = smokeT                                                                   .trace(p('')).then(function (p) return Resolved(AST_Smoke                                            )).lazyF();
+	static var spacePropP          = numberP.and_(spaceT)                                                     .trace(p('')).then(function (p) return Resolved(AST_Space(Std.parseFloat(p))                         )).lazyF();
+	static var stoppingPowerPropP  = numberP.and_(stoppingT).and_(powerT)                                     .trace(p('')).then(function (p) return Resolved(AST_StoppingPower(Std.parseInt(p))                   )).lazyF();
+	static var tanglerPropP        = tanglerT                                                                 .trace(p('')).then(function (p) return Resolved(AST_Tangler                                          )).lazyF();
+	static var thrownPropP         = thrownT                                                                  .trace(p('')).then(function (p) return Resolved(AST_Thrown                                           )).lazyF();
+	static var tracerPropP         = tracerT                                                                  .trace(p('')).then(function (p) return Resolved(AST_Tracer                                           )).lazyF();
+	static var turnsInUsePropP     = numberP.and_(turnsT).and_(inT).and_(useT)                                .trace(p('')).then(function (p) return Resolved(AST_TurnsInUse(Std.parseInt(p))                      )).lazyF();
+	static var valuePropP          = numberP.and_(valueT)                                                     .trace(p('')).then(function (p) return Resolved(AST_Value(Std.parseInt(p))                           )).lazyF();
+	static var warmUpPropP         = numberP.and_(warmUpT)                                                    .trace(p('')).then(function (p) return Resolved(AST_WarmUp(Std.parseInt(p))                          )).lazyF();
+	static var wideAnglePropP      = numberP.and_(wideT).and_(angleT)                                         .trace(p('')).then(function (p) return Resolved(AST_WideAngle(Std.parseInt(p))                       )).lazyF();
+	static var wireControlledPropP = wireControlledT                                                          .trace(p('')).then(function (p) return Resolved(AST_WireControlled                                   )).lazyF();
 }
 
 class MekTest extends haxe.unit.TestCase {
-	public function testCostPropP()                   propertyTest('1 Cost',                  MekParser.costPropP(),           Cost(1)              );
-	public function testSpacePropP()                  propertyTest('1 Space',                 MekParser.spacePropP(),          Space(1)             );
-	public function testKillsPropP()                  propertyTest('1 Kills',                 MekParser.killsPropP(),          Kills(1)             );
-	public function testAccuracyPropP()               propertyTest('1 Accuracy',              MekParser.accuracyPropP(),       Accuracy(1)          );
-	public function testRangePropP()                  propertyTest('1 Range',                 MekParser.rangePropP(),          Range(1)             );
-	public function testShotsPropP()                  propertyTest('1 Shots',                 MekParser.shotsPropP(),          Shots(1)             );
-	public function testWarmUpPropP()                 propertyTest('1 Warm-Up',               MekParser.warmUpPropP(),         WarmUp(1)            );
-	public function testWideAnglePropP()              propertyTest('1 Wide Angle',            MekParser.wideAnglePropP(),      WideAngle(1)         );
-	public function testBurstValuePropP()             propertyTest('1 Burst Value',           MekParser.burstValuePropP(),     BurstValue(1)        );
-	public function testAntiMissilePropP()            propertyTest('Anti-Missile',            MekParser.antiMissilePropP(),    AntiMissile(false)   );
-	public function testVariableAntiMissilePropP()    propertyTest('Variable Anti-Missile',   MekParser.antiMissilePropP(),    AntiMissile(true)    );
-	public function testAntiPersonnelPropP()          propertyTest('Anti-Personnel',          MekParser.antiPersonnelPropP(),  AntiPersonnel(false) );
-	public function testVariableAntiPersonnelPropP()  propertyTest('Variable Anti-Personnel', MekParser.antiPersonnelPropP(),  AntiPersonnel(true)  );
-	public function testAllPurposePropP()             propertyTest('All-Purpose',             MekParser.allPurposePropP(),     AllPurpose           );
-	public function testClipFedPropP()                propertyTest('Clip-Fed',                MekParser.clipFedPropP(),        ClipFed              );
-	public function testMegaBeamPropP()               propertyTest('Mega-Beam',               MekParser.megaBeamPropP(),       MegaBeam             );
-	public function testLongRangePropP()              propertyTest('Long Range',              MekParser.longRangePropP(),      LongRange            );
-	public function testFragilePropP()                propertyTest('Fragile',                 MekParser.fragilePropP(),        Fragile              );
-	public function testDisruptorPropP()              propertyTest('Disruptor',               MekParser.disruptorPropP(),      Disruptor            );
-	public function testHydroPropP()                  propertyTest('Hydro',                   MekParser.hydroPropP(),          Hydro                );
-	public function testAttackFactorPropP()           propertyTest('1 Attack Factor',         MekParser.attackFactorPropP(),   AttackFactor(1)      );
-	public function testTurnsInUsePropP()             propertyTest('1 Turns In Use',          MekParser.turnsInUsePropP(),     TurnsInUse(1)        );
-	public function testBeamShieldPropP()             propertyTest('Beam Shield',             MekParser.beamShieldPropP(),     BeamShield(false)    );
-	public function testVariableBeamShieldPropP()     propertyTest('Variable Beam Shield',    MekParser.beamShieldPropP(),     BeamShield(true)     );
-	public function testRechargeablePropP()           propertyTest('Rechargeable',            MekParser.rechargeablePropP(),   Rechargeable         );
-	public function testThrownPropP()                 propertyTest('Thrown',                  MekParser.thrownPropP(),         Thrown               );
-	public function testQuickPropP()                  propertyTest('Quick',                   MekParser.quickPropP(),          Quick                );
-	public function testHyperPropP()                  propertyTest('Hyper',                   MekParser.hyperPropP(),          Hyper                );
-	public function testShockPropP()                  propertyTest('Shock',                   MekParser.shockPropP(),          Shock(false)         );
-	public function testShockAddedPropP()             propertyTest('Shock Added',             MekParser.shockPropP(),          Shock(false)         );
-	public function testShockOnlyPropP()              propertyTest('Shock Only',              MekParser.shockPropP(),          Shock(true)          );
-	public function testReturningPropP()              propertyTest('Returning',               MekParser.returningPropP(),      Returning            );
-	public function testHandyPropP()                  propertyTest('Handy',                   MekParser.handyPropP(),          Handy                );
-	public function testClumsyPropP()                 propertyTest('Clumsy',                  MekParser.clumsyPropP(),         Clumsy               );
-	public function testEntanglePropP()               propertyTest('Entangle',                MekParser.entanglePropP(),       Entangle             );
-	public function testArmorPiercingPropP()          propertyTest('Armor-Piercing',          MekParser.armorPiercingPropP(),  ArmorPiercing        );
-	public function testBlastPropP()                  propertyTest('Blast 1',                 MekParser.blastPropP(),          Blast(1)             );
-	public function testSmartPropP()                  propertyTest('1 Smart',                 MekParser.smartPropP(),          Smart(1)             );
-	public function testSkillPropP()                  propertyTest('1 Skill',                 MekParser.skillPropP(),          Skill(1)             );
-	public function testHypervelocityPropP()          propertyTest('Hypervelocity',           MekParser.hypervelocityPropP(),  Hypervelocity        );
-	public function testCountermissilePropP()         propertyTest('Countermissile',          MekParser.countermissilePropP(), Countermissile(false));
-	public function testVariableCountermissilePropP() propertyTest('Variable Countermissile', MekParser.countermissilePropP(), Countermissile(true) );
-	public function testFusePropP()                   propertyTest('Fuse',                    MekParser.fusePropP(),           Fuse                 );
-	public function testNuclearPropP()                propertyTest('Nuclear',                 MekParser.nuclearPropP(),        Nuclear              );
-	public function testFoamPropP()                   propertyTest('Foam',                    MekParser.foamPropP(),           Foam                 );
-	public function testFlarePropP()                  propertyTest('Flare',                   MekParser.flarePropP(),          Flare                );
-	public function testScatterPropP()                propertyTest('Scatter',                 MekParser.scatterPropP(),        Scatter              );
-	public function testSmokePropP()                  propertyTest('Smoke',                   MekParser.smokePropP(),          Smoke                );
-	public function testMultiFeedPropP()              propertyTest('1 Multi-Feed',            MekParser.multiFeedPropP(),      MultiFeed(1)         );
-	public function testPhalanxPropP()                propertyTest('Phalanx',                 MekParser.phalanxPropP(),        Phalanx(false)       );
-	public function testVariablePhalanxPropP()        propertyTest('Variable Phalanx',        MekParser.phalanxPropP(),        Phalanx(true)        );
-	public function testMorphablePropP()              propertyTest('Morphable',               MekParser.morphablePropP(),      Morphable            );
-	public function testPaintballPropP()              propertyTest('Paintball',               MekParser.paintballPropP(),      Paintball            );
-	public function testHighExPropP()                 propertyTest('High-Explosive',          MekParser.highExPropP(),         HighEx               );
-	public function testTracerPropP()                 propertyTest('Tracer',                  MekParser.tracerPropP(),         Tracer               );
-	public function testKineticPropP()                propertyTest('Kinetic',                 MekParser.kineticPropP(),        Kinetic              );
-	public function testTanglerPropP()                propertyTest('Tangler',                 MekParser.tanglerPropP(),        Tangler              );
-	public function testIncendiaryPropP()             propertyTest('Incendiary',              MekParser.incendiaryPropP(),     Incendiary           );
-	public function testScattershotPropP()            propertyTest('Scattershot',             MekParser.scattershotPropP(),    Scattershot          );
-	public function testStoppingPowerPropP()          propertyTest('1 Stopping Power',        MekParser.stoppingPowerPropP(),  StoppingPower(1)     );
-	public function testDefenseAbilityPropP()         propertyTest('1 Defense Ability',       MekParser.defenseAbilityPropP(), DefenseAbility(1)    );
-	public function testBinderSpacePropP()            propertyTest('-1/2 Binder Space',       MekParser.binderSpacePropP(),    BinderSpace(1,2)     );
-	public function testResetPropP()                  propertyTest('1 Reset',                 MekParser.resetPropP(),          Reset(1)             );
-	public function testQualityValuePropP()           propertyTest('1 Quality Value',         MekParser.qualityValuePropP(),   QualityValue(1)      );
-	public function testSensorRangePropP()            propertyTest('1km Sensor Range',        MekParser.sensorRangePropP(),    SensorRange(1)       );
-	public function testCommRangePropP()              propertyTest('1km Comm Range',          MekParser.commRangePropP(),      CommRange(1)         );
-	public function testValuePropP()                  propertyTest('1 Value',                 MekParser.valuePropP(),          Value(1)             );
-	public function testRadiusPropP()                 propertyTest('1 Radius',                MekParser.radiusPropP(),         Radius(1)            );
-	public function testBeamingPropP()                propertyTest('1 Beaming',               MekParser.beamingPropP(),        Beaming(1)           );
-	public function testControlRangePropP()           propertyTest('1 Control Range',         MekParser.controlRangePropP(),   ControlRange(1)      );
-	public function testOperationRangePropP()         propertyTest('1 Operation Range',       MekParser.operationRangePropP(), OperationRange(1)    );
-	public function testWireControlledPropP()         propertyTest('Wire-Controlled',         MekParser.wireControlledPropP(), WireControlled       );
+	public function testCostPropP()                   propertyTest('1 Cost',                  MekParser.costPropP(),           AST_Cost(1)              );
+	public function testSpacePropP()                  propertyTest('1 Space',                 MekParser.spacePropP(),          AST_Space(1)             );
+	public function testKillsPropP()                  propertyTest('1 Kills',                 MekParser.killsPropP(),          AST_Kills(1)             );
+	public function testAccuracyPropP()               propertyTest('1 Accuracy',              MekParser.accuracyPropP(),       AST_Accuracy(1)          );
+	public function testRangePropP()                  propertyTest('1 Range',                 MekParser.rangePropP(),          AST_Range(1)             );
+	public function testShotsPropP()                  propertyTest('1 Shots',                 MekParser.shotsPropP(),          AST_Shots(1)             );
+	public function testWarmUpPropP()                 propertyTest('1 Warm-Up',               MekParser.warmUpPropP(),         AST_WarmUp(1)            );
+	public function testWideAnglePropP()              propertyTest('1 Wide Angle',            MekParser.wideAnglePropP(),      AST_WideAngle(1)         );
+	public function testBurstValuePropP()             propertyTest('1 Burst Value',           MekParser.burstValuePropP(),     AST_BurstValue(1)        );
+	public function testAntiMissilePropP()            propertyTest('Anti-Missile',            MekParser.antiMissilePropP(),    AST_AntiMissile(false)   );
+	public function testVariableAntiMissilePropP()    propertyTest('Variable Anti-Missile',   MekParser.antiMissilePropP(),    AST_AntiMissile(true)    );
+	public function testAntiPersonnelPropP()          propertyTest('Anti-Personnel',          MekParser.antiPersonnelPropP(),  AST_AntiPersonnel(false) );
+	public function testVariableAntiPersonnelPropP()  propertyTest('Variable Anti-Personnel', MekParser.antiPersonnelPropP(),  AST_AntiPersonnel(true)  );
+	public function testAllPurposePropP()             propertyTest('All-Purpose',             MekParser.allPurposePropP(),     AST_AllPurpose           );
+	public function testClipFedPropP()                propertyTest('Clip-Fed',                MekParser.clipFedPropP(),        AST_ClipFed              );
+	public function testMegaBeamPropP()               propertyTest('Mega-Beam',               MekParser.megaBeamPropP(),       AST_MegaBeam             );
+	public function testLongRangePropP()              propertyTest('Long Range',              MekParser.longRangePropP(),      AST_LongRange            );
+	public function testFragilePropP()                propertyTest('Fragile',                 MekParser.fragilePropP(),        AST_Fragile              );
+	public function testDisruptorPropP()              propertyTest('Disruptor',               MekParser.disruptorPropP(),      AST_Disruptor            );
+	public function testHydroPropP()                  propertyTest('Hydro',                   MekParser.hydroPropP(),          AST_Hydro                );
+	public function testAttackFactorPropP()           propertyTest('1 Attack Factor',         MekParser.attackFactorPropP(),   AST_AttackFactor(1)      );
+	public function testTurnsInUsePropP()             propertyTest('1 Turns In Use',          MekParser.turnsInUsePropP(),     AST_TurnsInUse(1)        );
+	public function testBeamShieldPropP()             propertyTest('Beam Shield',             MekParser.beamShieldPropP(),     AST_BeamShield(false)    );
+	public function testVariableBeamShieldPropP()     propertyTest('Variable Beam Shield',    MekParser.beamShieldPropP(),     AST_BeamShield(true)     );
+	public function testRechargeablePropP()           propertyTest('Rechargeable',            MekParser.rechargeablePropP(),   AST_Rechargeable         );
+	public function testThrownPropP()                 propertyTest('Thrown',                  MekParser.thrownPropP(),         AST_Thrown               );
+	public function testQuickPropP()                  propertyTest('Quick',                   MekParser.quickPropP(),          AST_Quick                );
+	public function testHyperPropP()                  propertyTest('Hyper',                   MekParser.hyperPropP(),          AST_Hyper                );
+	public function testShockPropP()                  propertyTest('Shock',                   MekParser.shockPropP(),          AST_Shock(false)         );
+	public function testShockAddedPropP()             propertyTest('Shock Added',             MekParser.shockPropP(),          AST_Shock(false)         );
+	public function testShockOnlyPropP()              propertyTest('Shock Only',              MekParser.shockPropP(),          AST_Shock(true)          );
+	public function testReturningPropP()              propertyTest('Returning',               MekParser.returningPropP(),      AST_Returning            );
+	public function testHandyPropP()                  propertyTest('Handy',                   MekParser.handyPropP(),          AST_Handy                );
+	public function testClumsyPropP()                 propertyTest('Clumsy',                  MekParser.clumsyPropP(),         AST_Clumsy               );
+	public function testEntanglePropP()               propertyTest('Entangle',                MekParser.entanglePropP(),       AST_Entangle             );
+	public function testArmorPiercingPropP()          propertyTest('Armor-Piercing',          MekParser.armorPiercingPropP(),  AST_ArmorPiercing        );
+	public function testBlastPropP()                  propertyTest('Blast 1',                 MekParser.blastPropP(),          AST_Blast(1)             );
+	public function testSmartPropP()                  propertyTest('1 Smart',                 MekParser.smartPropP(),          AST_Smart(1)             );
+	public function testSkillPropP()                  propertyTest('1 Skill',                 MekParser.skillPropP(),          AST_Skill(1)             );
+	public function testHypervelocityPropP()          propertyTest('Hypervelocity',           MekParser.hypervelocityPropP(),  AST_Hypervelocity        );
+	public function testCountermissilePropP()         propertyTest('Countermissile',          MekParser.countermissilePropP(), AST_Countermissile(false));
+	public function testVariableCountermissilePropP() propertyTest('Variable Countermissile', MekParser.countermissilePropP(), AST_Countermissile(true) );
+	public function testFusePropP()                   propertyTest('Fuse',                    MekParser.fusePropP(),           AST_Fuse                 );
+	public function testNuclearPropP()                propertyTest('Nuclear',                 MekParser.nuclearPropP(),        AST_Nuclear              );
+	public function testFoamPropP()                   propertyTest('Foam',                    MekParser.foamPropP(),           AST_Foam                 );
+	public function testFlarePropP()                  propertyTest('Flare',                   MekParser.flarePropP(),          AST_Flare                );
+	public function testScatterPropP()                propertyTest('Scatter',                 MekParser.scatterPropP(),        AST_Scatter              );
+	public function testSmokePropP()                  propertyTest('Smoke',                   MekParser.smokePropP(),          AST_Smoke                );
+	public function testMultiFeedPropP()              propertyTest('1 Multi-Feed',            MekParser.multiFeedPropP(),      AST_MultiFeed(1)         );
+	public function testPhalanxPropP()                propertyTest('Phalanx',                 MekParser.phalanxPropP(),        AST_Phalanx(false)       );
+	public function testVariablePhalanxPropP()        propertyTest('Variable Phalanx',        MekParser.phalanxPropP(),        AST_Phalanx(true)        );
+	public function testMorphablePropP()              propertyTest('Morphable',               MekParser.morphablePropP(),      AST_Morphable            );
+	public function testPaintballPropP()              propertyTest('Paintball',               MekParser.paintballPropP(),      AST_Paintball            );
+	public function testHighExPropP()                 propertyTest('High-Explosive',          MekParser.highExPropP(),         AST_HighEx               );
+	public function testTracerPropP()                 propertyTest('Tracer',                  MekParser.tracerPropP(),         AST_Tracer               );
+	public function testKineticPropP()                propertyTest('Kinetic',                 MekParser.kineticPropP(),        AST_Kinetic              );
+	public function testTanglerPropP()                propertyTest('Tangler',                 MekParser.tanglerPropP(),        AST_Tangler              );
+	public function testIncendiaryPropP()             propertyTest('Incendiary',              MekParser.incendiaryPropP(),     AST_Incendiary           );
+	public function testScattershotPropP()            propertyTest('Scattershot',             MekParser.scattershotPropP(),    AST_Scattershot          );
+	public function testStoppingPowerPropP()          propertyTest('1 Stopping Power',        MekParser.stoppingPowerPropP(),  AST_StoppingPower(1)     );
+	public function testDefenseAbilityPropP()         propertyTest('1 Defense Ability',       MekParser.defenseAbilityPropP(), AST_DefenseAbility(1)    );
+	public function testBinderSpacePropP()            propertyTest('-1/2 Binder Space',       MekParser.binderSpacePropP(),    AST_BinderSpace(1,2)     );
+	public function testResetPropP()                  propertyTest('1 Reset',                 MekParser.resetPropP(),          AST_Reset(1)             );
+	public function testQualityValuePropP()           propertyTest('1 Quality Value',         MekParser.qualityValuePropP(),   AST_QualityValue(1)      );
+	public function testSensorRangePropP()            propertyTest('1km Sensor Range',        MekParser.sensorRangePropP(),    AST_SensorRange(1)       );
+	public function testCommRangePropP()              propertyTest('1km Comm Range',          MekParser.commRangePropP(),      AST_CommRange(1)         );
+	public function testValuePropP()                  propertyTest('1 Value',                 MekParser.valuePropP(),          AST_Value(1)             );
+	public function testRadiusPropP()                 propertyTest('1 Radius',                MekParser.radiusPropP(),         AST_Radius(1)            );
+	public function testBeamingPropP()                propertyTest('1 Beaming',               MekParser.beamingPropP(),        AST_Beaming(1)           );
+	public function testControlRangePropP()           propertyTest('1 Control Range',         MekParser.controlRangePropP(),   AST_ControlRange(1)      );
+	public function testOperationRangePropP()         propertyTest('1 Operation Range',       MekParser.operationRangePropP(), AST_OperationRange(1)    );
+	public function testWireControlledPropP()         propertyTest('Wire-Controlled',         MekParser.wireControlledPropP(), AST_WireControlled       );
 
 	public function testProjAmmoPropP() {
 		switch (MekParser.projAmmoPropP()('Ammo'.reader())) {
 			case Failure(_,_): assertTrue(false);
-			case Success(p,_): switch (p) {
-				case Ammo(list):
-					assertEquals(list, []);
-				case _         : assertTrue(false);
+			case Success(a,_): switch (a) {
+				case Resolved  (p): switch (p) {
+					case AST_Ammo(list): assertEquals(list, []);
+					case _             : assertTrue(false);
+				}
+				case Unresolved(s): assertTrue(false);
 			}
 		}
-		propertyTest('Ammo',                    MekParser.projAmmoPropP(),       Ammo([])             );
 	}
 
-	function propertyTest(str: String, parser: Parser<String, Property>, prop: Property) {
+	function propertyTest(str: String, parser: Parser<String, AST<AST_Property>>, prop: AST_Property) {
 		switch (parser(str.reader())) {
 			case Failure(_,_): assertTrue(false);
-			case Success(p,_): assertEquals(p, prop);
+			case Success(a,_): switch (a) {
+				case Resolved  (p): assertEquals(p, prop);
+				case Unresolved(s): assertTrue(false);
+			}
 		}
 	}
 }
