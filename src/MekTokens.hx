@@ -7,7 +7,7 @@ class MekTokens {
 	static var retP   = '\r'.identifier().lazyF();
 	static var nlnP   = '\n'.identifier().lazyF();
 
-	static var identifierR = ~/[a-zA-Z0-9 _-]+/;
+	static var identifierR = ~/[a-zA-Z0-9 \/_-]+/;
 	static var numberR     = ~/[-+]?[0-9]*\.?[0-9]+/;
 	static var commentR    = ~/=.*/;
 
