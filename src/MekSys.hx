@@ -7,12 +7,12 @@ typedef Mekton = {
 
 enum MekSys {
 	/** Weapon Systems **/
-	Beam       (name: String, damage: Property, properties: Array<Property>);
-	EnergyMelee(name: String, damage: Property, properties: Array<Property>);
-	Melee      (name: String, damage: Property, properties: Array<Property>);
-	Missile    (name: String, damage: Property, properties: Array<Property>);
-	Projectile (name: String, damage: Property, properties: Array<Property>);
-	EnergyPool (name: String, power : Property, properties: Array<Property>, systems: Array<MekSys>);
+	Beam       (name: String, properties: Array<Property>);
+	EnergyMelee(name: String, properties: Array<Property>);
+	Melee      (name: String, properties: Array<Property>);
+	Missile    (name: String, properties: Array<Property>);
+	Projectile (name: String, properties: Array<Property>);
+	EnergyPool (name: String, properties: Array<Property>, systems: Array<MekSys>);
 
 	/** Mount Systems **/
 	Mount(system: Option<MekSys>, properties: Array<Property>);
@@ -60,9 +60,9 @@ enum MekSys {
 	VehiclePod          (properties: Array<Property>);
 
 	/** Crew Systems **/
-	Cockpit;
-	Passenger;
-	ExtraCrew;
+	Cockpit  (properties: Array<Property>);
+	Passenger(properties: Array<Property>);
+	ExtraCrew(properties: Array<Property>);
 
 	/** Recon Systems **/
 	AdvancedSensorPackage (properties: Array<Property>);
