@@ -14,11 +14,6 @@ using Armor;
 using Armor.ArmorClass;
 using SizeClass;
 
-typedef AST_Storage = {
-	mektons: Array<AST_Mekton>,
-	systems: Array<AST_MekSys>,
-}
-
 @:allow(MekTest)
 class MekParser {
 	static function tryParse<T>(str: String, parser: Parser<String, T>, withResult: T -> Void, output: String -> Void) {
