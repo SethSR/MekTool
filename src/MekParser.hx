@@ -29,7 +29,7 @@ class MekParser {
 						trace ('cannot parse ' + remaining);
 					}
 					// withResult(res);
-					trace (resolveSystems(ast.systems));
+					trace (printSystems(ast.systems));
 				case Failure(err, rest, _):
 					var p = rest.textAround();
 					output(p.text);
@@ -57,11 +57,14 @@ class MekParser {
 	}
 
 	static var ast = {
-		mektons: new Array<AST_Mekton>(),
-		systems: new Array<AST_MekSys>(),
+		mektons: new Map<String, AST_Mekton>(),
+		systems: new Map<String, AST_MekSys>(),
 	};
 
-	static function resolveSystems(systems: Array<AST_MekSys>) {
+	static function findSystem(name: String, systems: Array<AST_MekSys>) {
+	}
+
+	static function printSystems(systems: Map<String, AST_MekSys>) {
 		var str = new StringBuf();
 		for (ms in systems) {
 			switch (ms) {
@@ -202,6 +205,8 @@ class MekParser {
 		return str.toString();
 	}
 
+	static var index = 0;
+
 
 	/************
 	 *  Parser  *
@@ -209,11 +214,11 @@ class MekParser {
 	static var fileP = spacingP._and(definitionP.many()).commit().lazyF();
 
 	static var definitionP = [
-		mektonDefP.then(function (p) ast.mektons.push(AST_Mekton(p.a, p.b))),
-		systemDefP.then(function (p) ast.systems.push(p)),
+		mektonDefP,
+		systemDefP,
 	].ors().lazyF();
 
-	static var mektonDefP = mektonT._and(nameDeclP).band(servoP.many()).tag('Mekton').lazyF();
+	static var mektonDefP = mektonT._and(nameDeclP).band(servoP.many()).then(function (p) ast.mektons.set(p.a, AST_Mekton(p.a, p.b))).lazyF();
 
 	static var servoP = [
 		sizeClassP.band(torsoT._and(armorP.band(systemDeclP.many()))).then(function (p) return Torso(p.a, p.b.a, p.b.b)),
