@@ -1,8 +1,7 @@
 import com.mindrocks.functional.Functional.Option;
 
-typedef Mekton = {
-	name: String,
-	servos: Array<Servo>,
+enum Mekton {
+	Mekton(name: String, servos: Array<Servo>);
 }
 
 enum MekSys {
@@ -13,6 +12,11 @@ enum MekSys {
 	Missile    (name: String, properties: Array<Property>);
 	Projectile (name: String, properties: Array<Property>);
 	EnergyPool (name: String, properties: Array<Property>, systems: Array<MekSys>);
+
+	/** Shield Systems **/
+	StandardShield(name: Option<String>, armor: Option<Armor.ArmorClass>, sizeClass: SizeClass, properties: Array<Property>);
+	ActiveShield  (name: Option<String>, armor: Option<Armor.ArmorClass>, sizeClass: SizeClass, properties: Array<Property>);
+	ReactiveShield(name: Option<String>, armor: Option<Armor.ArmorClass>, sizeClass: SizeClass, properties: Array<Property>);
 
 	/** Mount Systems **/
 	Mount(system: Option<MekSys>, properties: Array<Property>);
