@@ -28,9 +28,8 @@ class MekParser {
 					} else {
 						trace ('cannot parse ' + remaining);
 					}
-					withResult(res);
-					trace (ast.mektons);
-					trace (ast.systems);
+					// withResult(res);
+					trace (resolveSystems(ast.systems));
 				case Failure(err, rest, _):
 					var p = rest.textAround();
 					output(p.text);
@@ -57,41 +56,151 @@ class MekParser {
 		);
 	}
 
-	static var resolved_systems: Map<String, Map<String, MekSys>> = [
-		'beam'        => new Map<String, MekSys>(),
-		'energyMelee' => new Map<String, MekSys>(),
-		'melee'       => new Map<String, MekSys>(),
-		'missile'     => new Map<String, MekSys>(),
-		'projectile'  => new Map<String, MekSys>(),
-		'energyPool'  => new Map<String, MekSys>(),
-		'ammo'        => new Map<String, MekSys>(),
-		'mated'       => new Map<String, MekSys>(),
-		'shield'      => new Map<String, MekSys>(),
-		'reflector'   => new Map<String, MekSys>(),
-		'sensor'      => new Map<String, MekSys>(),
-		'electronic'  => new Map<String, MekSys>(),
-		'remote'      => new Map<String, MekSys>(),
-	];
-	// static var resolved_mektons = new Array<Mekton>();
-
-	static function resolve(c: String, s: String, ms: MekSys) {
-		var mek_map = resolved_systems.get(c);
-		if (!mek_map.exists(s))
-			mek_map.set(s, ms);
-		else
-			trace (s + ' already defined!');
-	}
-
-	static function get(c: String, s: String)
-		return Parsers.success(resolved_systems.exists(c) ? resolved_systems.get(c).exists(s) ? resolved_systems.get(c).get(s) : null : null);
-
-	static function p<T>(s: String): T -> String
-		return function (t: T) return 'parsed ' + s;
-
 	static var ast = {
 		mektons: new Array<AST_Mekton>(),
 		systems: new Array<AST_MekSys>(),
 	};
+
+	static function resolveSystems(systems: Array<AST_MekSys>) {
+		var str = new StringBuf();
+		for (ms in systems) {
+			switch (ms) {
+				case Beam                  (name, properties)                  : str.add('Beam($name, [${resolve(properties)}])\n');
+				case EnergyMelee           (name, properties)                  : str.add('Energy Melee($name, [${resolve(properties)}])\n');
+				case Melee                 (name, properties)                  : str.add('Melee($name, [${resolve(properties)}])\n');
+				case Missile               (name, properties)                  : str.add('Missile($name, [${resolve(properties)}])\n');
+				case Projectile            (name, properties)                  : str.add('Projectile($name, [${resolve(properties)}])\n');
+				case EnergyPool            (name, properties, systems)         : str.add('Energy Pool($name, [${resolve(properties)}], $systems)\n');
+				case StandardShield        (name, armor, sizeClass, properties): str.add('Standard Shield($name, $armor, $sizeClass, [${resolve(properties)}])\n');
+				case ActiveShield          (name, armor, sizeClass, properties): str.add('Active Shield($name, $armor, $sizeClass, [${resolve(properties)}])\n');
+				case ReactiveShield        (name, armor, sizeClass, properties): str.add('Reactive Shield($name, $armor, $sizeClass, [${resolve(properties)}])\n');
+				case Mount                 (system, properties)                : str.add('Mount($system, [${resolve(properties)}])\n');
+				case Hand                  (system, properties)                : str.add('Hand($system, [${resolve(properties)}])\n');
+				case MatedSystem           (name, systems, properties)         : str.add('Mated($name, $systems, [${resolve(properties)}])\n');
+				case Reflector             (name, properties)                  : str.add('Reflector($name, [${resolve(properties)}])\n');
+				case RemoteControl         (name, sizeClass, properties)       : str.add('Remote Control($name, $sizeClass, [${resolve(properties)}])\n');
+				case Ammo                  (name, properties)                  : str.add('Ammo($name, [${resolve(properties)}])\n');
+				case SensorECM             (name, properties)                  : str.add('Sensor ECM($name, [${resolve(properties)}])\n');
+				case MissileECM            (name, properties)                  : str.add('Missile ECM($name, [${resolve(properties)}])\n');
+				case RadarECM              (name, properties)                  : str.add('Radar ECM($name, [${resolve(properties)}])\n');
+				case CounterECM            (name, properties)                  : str.add('Counter ECM($name, [${resolve(properties)}])\n');
+				case Sensor                (name, sizeClass, properties)       : str.add('Sensor($name, [${resolve(properties)}])\n');
+				case Stereo                (properties)                        : str.add('Stereo([${resolve(properties)}])\n');
+				case Liftwire              (properties)                        : str.add('Liftwire([${resolve(properties)}])\n');
+				case AntiTheftCodeLock     (properties)                        : str.add('Anti-Theft Code Lock([${resolve(properties)}])\n');
+				case Spotlights            (properties)                        : str.add('Spotlights([${resolve(properties)}])\n');
+				case Nightlights           (properties)                        : str.add('Nightlights([${resolve(properties)}])\n');
+				case StorageModule         (properties)                        : str.add('Storage Module([${resolve(properties)}])\n');
+				case Micromanipulators     (properties)                        : str.add('Micromanipulators([${resolve(properties)}])\n');
+				case SlickSpray            (properties)                        : str.add('Slick-Spray([${resolve(properties)}])\n');
+				case BoggSpray             (properties)                        : str.add('Bogg-Spray([${resolve(properties)}])\n');
+				case DamageControlPackage  (properties)                        : str.add('Damage Control Package([${resolve(properties)}])\n');
+				case QuickChangeMount      (properties)                        : str.add('Quick Change Mount([${resolve(properties)}])\n');
+				case SilentRunning         (properties)                        : str.add('Silent Running([${resolve(properties)}])\n');
+				case Parachute             (properties)                        : str.add('Parachute([${resolve(properties)}])\n');
+				case ReEntryPackage        (properties)                        : str.add('Re-Entry Package([${resolve(properties)}])\n');
+				case EjectionSeat          (properties)                        : str.add('Ejection Seat([${resolve(properties)}])\n');
+				case EscapePod             (properties)                        : str.add('Escape Pod([${resolve(properties)}])\n');
+				case ManeuverPod           (properties)                        : str.add('Maneuver Pod([${resolve(properties)}])\n');
+				case VehiclePod            (properties)                        : str.add('Vehicle Pod([${resolve(properties)}])\n');
+				case Cockpit               (properties)                        : str.add('Cockpit([${resolve(properties)}])\n');
+				case Passenger             (properties)                        : str.add('Passenger([${resolve(properties)}])\n');
+				case ExtraCrew             (properties)                        : str.add('Extra Crew([${resolve(properties)}])\n');
+				case AdvancedSensorPackage (properties)                        : str.add('Advanced Sensor Package([${resolve(properties)}])\n');
+				case RadioRadarAnalyzer    (properties)                        : str.add('Radio/Radar Analyzer([${resolve(properties)}])\n');
+				case ResolutionIntensifiers(properties)                        : str.add('Resolution Intensifiers([${resolve(properties)}])\n');
+				case SpottingRadar         (properties)                        : str.add('Spotting Radar([${resolve(properties)}])\n');
+				case TargetAnalyzer        (properties)                        : str.add('Target Analyzer([${resolve(properties)}])\n');
+				case MarineSuite           (properties)                        : str.add('Marine Suite([${resolve(properties)}])\n');
+				case GravityLens           (properties)                        : str.add('Gravity Lens([${resolve(properties)}])\n');
+				case MagneticResonance     (properties)                        : str.add('Magnetic Resonance([${resolve(properties)}])\n');
+			}
+		}
+		return str.toString();
+	}
+
+	static function resolve(properties: Array<AST<AST_Property>>) {
+		var str = new StringBuf();
+		for (a in properties) switch (a) {
+			case Resolved(p): switch (p) {
+				case AST_Accuracy(n)      : str.add('\n  Accuracy($n)');
+				case AST_AllPurpose       : str.add('\n  All-Purpose');
+				case AST_Ammo(ammo)       : str.add('\n  Ammo($ammo)');
+				case AST_AntiMissile(b)   : str.add('\n  Anti-Missile($b)');
+				case AST_AntiPersonnel(b) : str.add('\n  Anti-Personnel($b)');
+				case AST_ArmorPiercing    : str.add('\n  Armor-Piercing');
+				case AST_AttackFactor(n)  : str.add('\n  Attack Factor($n)');
+				case AST_Beaming(n)       : str.add('\n  Beaming($n)');
+				case AST_BeamShield(b)    : str.add('\n  Beam Shield($b)');
+				case AST_BinderSpace(n,d) : str.add('\n  Binder Space(-$n/$d)');
+				case AST_Blast(n)         : str.add('\n  Blast($n)');
+				case AST_BurstValue(n)    : str.add('\n  Burst Value($n)');
+				case AST_ClipFed          : str.add('\n  Clip-Fed');
+				case AST_Clumsy           : str.add('\n  Clumsy');
+				case AST_CommRange(n)     : str.add('\n  Comm Range($n)');
+				case AST_ControlRange(n)  : str.add('\n  Control Range($n)');
+				case AST_Cost(v)          : str.add('\n  Cost($v)');
+				case AST_Countermissile(b): str.add('\n  Countermissile($b)');
+				case AST_Damage(v)        : str.add('\n  Damage($v)');
+				case AST_DefenseAbility(n): str.add('\n  Defense Ability($n)');
+				case AST_Disruptor        : str.add('\n  Disruptor');
+				case AST_Entangle         : str.add('\n  Entangle');
+				case AST_Flare            : str.add('\n  Flare');
+				case AST_Foam             : str.add('\n  Foam');
+				case AST_Fragile          : str.add('\n  Fragile');
+				case AST_Fuse             : str.add('\n  Fuse');
+				case AST_Handy            : str.add('\n  Handy');
+				case AST_HighEx           : str.add('\n  High Explosive');
+				case AST_Hydro            : str.add('\n  Hydro');
+				case AST_Hyper            : str.add('\n  Hyper');
+				case AST_Hypervelocity    : str.add('\n  Hypervelocity');
+				case AST_Incendiary       : str.add('\n  Incendiary');
+				case AST_Interference     : str.add('\n  Interference');
+				case AST_Kills(v)         : str.add('\n  Kills($v)');
+				case AST_Kinetic          : str.add('\n  Kinetic');
+				case AST_LongRange        : str.add('\n  Long Range');
+				case AST_MegaBeam         : str.add('\n  Mega Beam');
+				case AST_Mirror           : str.add('\n  Mirror');
+				case AST_Morphable        : str.add('\n  Morphable');
+				case AST_MultiFeed(n)     : str.add('\n  Multi-Feed($n)');
+				case AST_Nuclear          : str.add('\n  Nuclear');
+				case AST_OperationRange(n): str.add('\n  Operation Range($n)');
+				case AST_Paintball        : str.add('\n  Paintball');
+				case AST_Phalanx(b)       : str.add('\n  Phalanx($b)');
+				case AST_Power(n)         : str.add('\n  Power($n)');
+				case AST_QualityValue(n)  : str.add('\n  Quality Value($n)');
+				case AST_Quick            : str.add('\n  Quick');
+				case AST_Radius(n)        : str.add('\n  Radius($n)');
+				case AST_Range(n)         : str.add('\n  Range($n)');
+				case AST_Rechargeable     : str.add('\n  Rechargeable');
+				case AST_Reset(n)         : str.add('\n  Reset($n)');
+				case AST_Returning        : str.add('\n  Returning');
+				case AST_Scatter          : str.add('\n  Scatter');
+				case AST_Scattershot      : str.add('\n  Scattershot');
+				case AST_Screen           : str.add('\n  Screen');
+				case AST_SensorRange(n)   : str.add('\n  Sensor Range($n)');
+				case AST_Shock(b)         : str.add('\n  Shock($b)');
+				case AST_Shots(n)         : str.add('\n  Shots($n)');
+				case AST_Skill(n)         : str.add('\n  Skill($n)');
+				case AST_Smart(n)         : str.add('\n  Smart($n)');
+				case AST_Smoke            : str.add('\n  Smoke');
+				case AST_Space(v)         : str.add('\n  Space($v)');
+				case AST_StoppingPower(n) : str.add('\n  Stopping Power($n)');
+				case AST_Surge            : str.add('\n  Surge');
+				case AST_Swashbuckling    : str.add('\n  Swashbuckling');
+				case AST_Tangler          : str.add('\n  Tangler');
+				case AST_Thrown           : str.add('\n  Thrown');
+				case AST_Tracer           : str.add('\n  Tracer');
+				case AST_TurnsInUse(n)    : str.add('\n  Turns In Use($n)');
+				case AST_Value(n)         : str.add('\n  Value($n)');
+				case AST_WarmUp(n)        : str.add('\n  Warm-Up($n)');
+				case AST_WideAngle(n)     : str.add('\n  Wide Angle($n)');
+				case AST_WireControlled   : str.add('\n  Wire-Controlled');
+			}
+			case Unresolved(s): str.add('\'$s\'');
+		}
+		return str.toString();
+	}
 
 
 	/************
