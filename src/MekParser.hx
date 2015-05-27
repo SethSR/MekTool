@@ -29,7 +29,8 @@ class MekParser {
 						trace ('cannot parse ' + remaining);
 					}
 					// withResult(res);
-					trace (MekPrinter.printSystems(ast.systems));
+					Resolver.resolve(ast);
+					// trace (MekPrinter.printSystems(ast.systems));
 				case Failure(err, rest, _):
 					var p = rest.textAround();
 					output(p.text);
@@ -75,13 +76,13 @@ class MekParser {
 	static var mektonDefP = mektonT._and(nameDeclP).band(servoP.many()).tag('Mekton').lazyF();
 
 	static var servoP = [
-		sizeClassP.band(torsoT._and(armorP.band(systemDeclP.many()))).then(function (p) return Torso(p.a, p.b.a, p.b.b)),
-		sizeClassP.band(headT ._and(armorP.band(systemDeclP.many()))).then(function (p) return Head (p.a, p.b.a, p.b.b)),
-		sizeClassP.band(armT  ._and(armorP.band(systemDeclP.many()))).then(function (p) return Arm  (p.a, p.b.a, p.b.b)),
-		sizeClassP.band(legT  ._and(armorP.band(systemDeclP.many()))).then(function (p) return Leg  (p.a, p.b.a, p.b.b)),
-		sizeClassP.band(tailT ._and(armorP.band(systemDeclP.many()))).then(function (p) return Tail (p.a, p.b.a, p.b.b)),
-		sizeClassP.band(wingT ._and(armorP.band(systemDeclP.many()))).then(function (p) return Wing (p.a, p.b.a, p.b.b)),
-		sizeClassP.band(podT  ._and(armorP.band(systemDeclP.many()))).then(function (p) return Pod  (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(torsoT._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Torso(p.a, p.b.a, p.b.b)),
+		sizeClassP.band(headT ._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Head (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(armT  ._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Arm  (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(legT  ._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Leg  (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(tailT ._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Tail (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(wingT ._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Wing (p.a, p.b.a, p.b.b)),
+		sizeClassP.band(podT  ._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Pod  (p.a, p.b.a, p.b.b)),
 	].ors().tag('Servo').lazyF();
 
 	static var sizeClassP = [
@@ -143,8 +144,8 @@ class MekParser {
 	].ors().lazyF();
 
 	static var mountDeclP = [
-		mountT._and(mountSystemP).band(systemPropP.many()).then(function (p) return Resolved(Mount(p.a , p.b))),
-		mountT.band(emptyT)._and(systemPropP.many())      .then(function (p) return Resolved(Mount(null, p  ))),
+		mountT._and(mountSystemP).band(systemPropP.many()).then(function (p) return Resolved(AST_Mount(p.a , p.b))),
+		mountT.band(emptyT)._and(systemPropP.many())      .then(function (p) return Resolved(AST_Mount(null, p  ))),
 	].ors().lazyF();
 
 	static var mountSystemP = [
@@ -162,36 +163,36 @@ class MekParser {
 	].ors().lazyF();
 
 	static var crewDeclP = [
-		cockpitT          ._and(systemPropP.many()).then(function (p) return Resolved(Cockpit  (p))),
-		passengerT        ._and(systemPropP.many()).then(function (p) return Resolved(Passenger(p))),
-		extraT._and(crewT)._and(systemPropP.many()).then(function (p) return Resolved(ExtraCrew(p))),
+		cockpitT          ._and(systemPropP.many()).then(function (p) return Resolved(AST_Cockpit  (p))),
+		passengerT        ._and(systemPropP.many()).then(function (p) return Resolved(AST_Passenger(p))),
+		extraT._and(crewT)._and(systemPropP.many()).then(function (p) return Resolved(AST_ExtraCrew(p))),
 	].ors().lazyF();
 
 	static var optionDeclP = [
-		stereoT._and                              (systemPropP.many()).then(function (p) return Resolved(Stereo              (p))),
-		liftwireT._and                            (systemPropP.many()).then(function (p) return Resolved(Liftwire            (p))),
-		antiTheftT._and(codeT.band(lockT))._and   (systemPropP.many()).then(function (p) return Resolved(AntiTheftCodeLock   (p))),
-		spotlightsT._and                          (systemPropP.many()).then(function (p) return Resolved(Spotlights          (p))),
-		nightlightsT._and                         (systemPropP.many()).then(function (p) return Resolved(Nightlights         (p))),
-		storageT._and(moduleT)._and               (systemPropP.many()).then(function (p) return Resolved(StorageModule       (p))),
-		micromanipulatorsT._and                   (systemPropP.many()).then(function (p) return Resolved(Micromanipulators   (p))),
-		slickSprayT._and                          (systemPropP.many()).then(function (p) return Resolved(SlickSpray          (p))),
-		boggSprayT._and                           (systemPropP.many()).then(function (p) return Resolved(BoggSpray           (p))),
-		damageT._and(controlT.band(packageT))._and(systemPropP.many()).then(function (p) return Resolved(DamageControlPackage(p))),
-		quickT._and(changeT.band(mountT))._and    (systemPropP.many()).then(function (p) return Resolved(QuickChangeMount    (p))),
-		silentT._and(runningT)._and               (systemPropP.many()).then(function (p) return Resolved(SilentRunning       (p))),
-		parachuteT._and                           (systemPropP.many()).then(function (p) return Resolved(Parachute           (p))),
-		reEntryT._and(packageT)._and              (systemPropP.many()).then(function (p) return Resolved(ReEntryPackage      (p))),
-		ejectionT._and(seatT)._and                (systemPropP.many()).then(function (p) return Resolved(EjectionSeat        (p))),
-		escapeT._and(podT)._and                   (systemPropP.many()).then(function (p) return Resolved(EscapePod           (p))),
-		maneuverT._and(podT)._and                 (systemPropP.many()).then(function (p) return Resolved(ManeuverPod         (p))),
-		vehicleT._and(podT)._and                  (systemPropP.many()).then(function (p) return Resolved(VehiclePod          (p))),
+		stereoT._and                              (systemPropP.many()).then(function (p) return Resolved(AST_Stereo              (p))),
+		liftwireT._and                            (systemPropP.many()).then(function (p) return Resolved(AST_Liftwire            (p))),
+		antiTheftT._and(codeT.band(lockT))._and   (systemPropP.many()).then(function (p) return Resolved(AST_AntiTheftCodeLock   (p))),
+		spotlightsT._and                          (systemPropP.many()).then(function (p) return Resolved(AST_Spotlights          (p))),
+		nightlightsT._and                         (systemPropP.many()).then(function (p) return Resolved(AST_Nightlights         (p))),
+		storageT._and(moduleT)._and               (systemPropP.many()).then(function (p) return Resolved(AST_StorageModule       (p))),
+		micromanipulatorsT._and                   (systemPropP.many()).then(function (p) return Resolved(AST_Micromanipulators   (p))),
+		slickSprayT._and                          (systemPropP.many()).then(function (p) return Resolved(AST_SlickSpray          (p))),
+		boggSprayT._and                           (systemPropP.many()).then(function (p) return Resolved(AST_BoggSpray           (p))),
+		damageT._and(controlT.band(packageT))._and(systemPropP.many()).then(function (p) return Resolved(AST_DamageControlPackage(p))),
+		quickT._and(changeT.band(mountT))._and    (systemPropP.many()).then(function (p) return Resolved(AST_QuickChangeMount    (p))),
+		silentT._and(runningT)._and               (systemPropP.many()).then(function (p) return Resolved(AST_SilentRunning       (p))),
+		parachuteT._and                           (systemPropP.many()).then(function (p) return Resolved(AST_Parachute           (p))),
+		reEntryT._and(packageT)._and              (systemPropP.many()).then(function (p) return Resolved(AST_ReEntryPackage      (p))),
+		ejectionT._and(seatT)._and                (systemPropP.many()).then(function (p) return Resolved(AST_EjectionSeat        (p))),
+		escapeT._and(podT)._and                   (systemPropP.many()).then(function (p) return Resolved(AST_EscapePod           (p))),
+		maneuverT._and(podT)._and                 (systemPropP.many()).then(function (p) return Resolved(AST_ManeuverPod         (p))),
+		vehicleT._and(podT)._and                  (systemPropP.many()).then(function (p) return Resolved(AST_VehiclePod          (p))),
 	].ors().lazyF();
 
 
 	static var handDeclP = [
-		handT._and(handSystemP).band(systemPropP.many()).then(function (p) return Resolved(Hand(p.a , p.b))),
-		handT.band(emptyT)._and(systemPropP.many())     .then(function (p) return Resolved(Hand(null, p  ))),
+		handT._and(handSystemP).band(systemPropP.many()).then(function (p) return Resolved(AST_Hand(p.a , p.b))),
+		handT.band(emptyT)._and(systemPropP.many())     .then(function (p) return Resolved(AST_Hand(null, p  ))),
 	].ors().lazyF();
 
 	static var handSystemP = [
@@ -209,14 +210,14 @@ class MekParser {
 	].ors().lazyF();
 
 	static var reconSysDeclP = [
-		advancedT._and(sensorT.band(packageT))._and          (systemPropP.many()).then(function (p) return Resolved(AdvancedSensorPackage (p))),
-		radioT._and(slashT.band(radarT).band(analyzerT))._and(systemPropP.many()).then(function (p) return Resolved(RadioRadarAnalyzer    (p))),
-		resolutionT._and(intensifiersT)._and                 (systemPropP.many()).then(function (p) return Resolved(ResolutionIntensifiers(p))),
-		spottingT._and(radarT)._and                          (systemPropP.many()).then(function (p) return Resolved(SpottingRadar         (p))),
-		targetT._and(analyzerT)._and                         (systemPropP.many()).then(function (p) return Resolved(TargetAnalyzer        (p))),
-		marineT._and(suiteT)._and                            (systemPropP.many()).then(function (p) return Resolved(MarineSuite           (p))),
-		gravityT._and(lensT)._and                            (systemPropP.many()).then(function (p) return Resolved(GravityLens           (p))),
-		magneticT._and(resonanceT)._and                      (systemPropP.many()).then(function (p) return Resolved(MagneticResonance     (p))),
+		advancedT._and(sensorT.band(packageT))._and          (systemPropP.many()).then(function (p) return Resolved(AST_AdvancedSensorPackage (p))),
+		radioT._and(slashT.band(radarT).band(analyzerT))._and(systemPropP.many()).then(function (p) return Resolved(AST_RadioRadarAnalyzer    (p))),
+		resolutionT._and(intensifiersT)._and                 (systemPropP.many()).then(function (p) return Resolved(AST_ResolutionIntensifiers(p))),
+		spottingT._and(radarT)._and                          (systemPropP.many()).then(function (p) return Resolved(AST_SpottingRadar         (p))),
+		targetT._and(analyzerT)._and                         (systemPropP.many()).then(function (p) return Resolved(AST_TargetAnalyzer        (p))),
+		marineT._and(suiteT)._and                            (systemPropP.many()).then(function (p) return Resolved(AST_MarineSuite           (p))),
+		gravityT._and(lensT)._and                            (systemPropP.many()).then(function (p) return Resolved(AST_GravityLens           (p))),
+		magneticT._and(resonanceT)._and                      (systemPropP.many()).then(function (p) return Resolved(AST_MagneticResonance     (p))),
 	].ors().lazyF();
 
 	static var energyPoolSystemP = [
@@ -244,30 +245,30 @@ class MekParser {
 		energyPoolDefP,
 	].ors().lazyF();
 
-	static var beamDefP        = beamT._and(nameDeclP.band(damagePropP.band(beamPropP.many())))                      .then(function (p) return Beam       (p.a, p.b.b)).lazyF();
-	static var energyMeleeDefP = energyT._and(meleeT._and(nameDeclP.band(damagePropP.band(energyMeleePropP.many())))).then(function (p) return EnergyMelee(p.a, p.b.b)).lazyF();
-	static var meleeDefP       = meleeT._and(nameDeclP.band(damagePropP.band(meleePropP.many())))                    .then(function (p) return Melee      (p.a, p.b.b)).lazyF();
-	static var missileDefP     = missileT._and(nameDeclP.band(damagePropP.band(missilePropP.many())))                .then(function (p) return Missile    (p.a, p.b.b)).lazyF();
-	static var projectileDefP  = projectileT._and(nameDeclP.band(damagePropP.band(projectilePropP.many())))          .then(function (p) return Projectile (p.a, p.b.b)).lazyF();
-	static var energyPoolDefP  = energyT._and(poolT._and(nameDeclP.band(powerPropP.band(energyPoolPropP.many().band(energyPoolSystemP.many()))))).then(function (p) return EnergyPool (p.a, p.b.b.a, p.b.b.b)).lazyF();
+	static var beamDefP        = beamT._and(nameDeclP.band(damagePropP.band(beamPropP.many())))                      .then(function (p) return AST_Beam       (p.a, p.b.b)).lazyF();
+	static var energyMeleeDefP = energyT._and(meleeT._and(nameDeclP.band(damagePropP.band(energyMeleePropP.many())))).then(function (p) return AST_EnergyMelee(p.a, p.b.b)).lazyF();
+	static var meleeDefP       = meleeT._and(nameDeclP.band(damagePropP.band(meleePropP.many())))                    .then(function (p) return AST_Melee      (p.a, p.b.b)).lazyF();
+	static var missileDefP     = missileT._and(nameDeclP.band(damagePropP.band(missilePropP.many())))                .then(function (p) return AST_Missile    (p.a, p.b.b)).lazyF();
+	static var projectileDefP  = projectileT._and(nameDeclP.band(damagePropP.band(projectilePropP.many())))          .then(function (p) return AST_Projectile (p.a, p.b.b)).lazyF();
+	static var energyPoolDefP  = energyT._and(poolT._and(nameDeclP.band(powerPropP.band(energyPoolPropP.many().band(energyPoolSystemP.many()))))).then(function (p) return AST_EnergyPool (p.a, p.b.b.a, p.b.b.b)).lazyF();
 
-	static var ammoDefP          = ammoT._and(nameDeclP).band(ammoPropP.many())                                           .then(function (p) return Ammo       (p.a, p.b)).lazyF();
-	static var matedSystemDefP   = matedT._and(nameDeclP.band(systemPropP.many().band(systemDeclP.band(systemDeclP))))    .then(function (p) return MatedSystem(p.a, [p.b.b.a, p.b.b.b], p.b.a)).lazyF();
-	static var reflectorDefP     = reflectorT._and(nameDeclP.band(qualityValuePropP.band(systemPropP.many())))            .then(function (p) { p.b.b.push(p.b.a); return Reflector  (p.a, p.b.b); }).lazyF();
-	static var sensorDefP        = sizeClassP.band(sensorT._and(nameDeclP.band(sensorPropP.many())))                      .then(function (p) return Sensor     (p.b.a, p.a, p.b.b)).lazyF();
-	static var remoteControlDefP = sizeClassP.band(remoteT._and(controlT)._and(nameDeclP).band(remoteControlPropP.many())).then(function (p) return RemoteControl(p.b.a, p.a, p.b.b)).lazyF();
+	static var ammoDefP          = ammoT._and(nameDeclP).band(ammoPropP.many())                                           .then(function (p) return AST_MekSys.AST_Ammo       (p.a, p.b)).lazyF();
+	static var matedSystemDefP   = matedT._and(nameDeclP.band(systemPropP.many().band(systemDeclP.band(systemDeclP))))    .then(function (p) return AST_MatedSystem(p.a, [p.b.b.a, p.b.b.b], p.b.a)).lazyF();
+	static var reflectorDefP     = reflectorT._and(nameDeclP.band(qualityValuePropP.band(systemPropP.many())))            .then(function (p) { p.b.b.push(p.b.a); return AST_Reflector  (p.a, p.b.b); }).lazyF();
+	static var sensorDefP        = sizeClassP.band(sensorT._and(nameDeclP.band(sensorPropP.many())))                      .then(function (p) return AST_Sensor     (p.b.a, p.a, p.b.b)).lazyF();
+	static var remoteControlDefP = sizeClassP.band(remoteT._and(controlT)._and(nameDeclP).band(remoteControlPropP.many())).then(function (p) return AST_RemoteControl(p.b.a, p.a, p.b.b)).lazyF();
 	static var elecWarDefP       = [
-		sensorT._and(ecmT) ._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).then(function (p) { p.b.b.push(p.b.a); return SensorECM (p.a, p.b.b); }),
-		missileT._and(ecmT)._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).then(function (p) { p.b.b.push(p.b.a); return MissileECM(p.a, p.b.b); }),
-		radarT._and(ecmT)  ._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).then(function (p) { p.b.b.push(p.b.a); return RadarECM  (p.a, p.b.b); }),
-		eccmT              ._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).then(function (p) { p.b.b.push(p.b.a); return CounterECM(p.a, p.b.b); }),
+		sensorT._and(ecmT) ._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).then(function (p) { p.b.b.push(p.b.a); return AST_SensorECM (p.a, p.b.b); }),
+		missileT._and(ecmT)._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).then(function (p) { p.b.b.push(p.b.a); return AST_MissileECM(p.a, p.b.b); }),
+		radarT._and(ecmT)  ._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).then(function (p) { p.b.b.push(p.b.a); return AST_RadarECM  (p.a, p.b.b); }),
+		eccmT              ._and(nameDeclP).band(valuePropP.band(ecmPropP.many())).then(function (p) { p.b.b.push(p.b.a); return AST_CounterECM(p.a, p.b.b); }),
 	].ors().lazyF();
 
 	static var shieldDefP = [
-		standardT._and(armorClassP.option().band(sizeClassP.and_(shieldT))).band(nameDeclP.band(shieldPropP.many())).then(function (p) return StandardShield(Some(p.b.a), p.a.a, p.a.b, p.b.b)),
-		activeT  ._and(armorClassP.option().band(sizeClassP.and_(shieldT))).band(nameDeclP.band(shieldPropP.many())).then(function (p) return ActiveShield  (Some(p.b.a), p.a.a, p.a.b, p.b.b)),
-		reactiveT._and(armorClassP.option().band(sizeClassP.and_(shieldT))).band(nameDeclP.band(shieldPropP.many())).then(function (p) return ReactiveShield(Some(p.b.a), p.a.a, p.a.b, p.b.b)),
-		               armorClassP.option().band(sizeClassP.and_(shieldT)) .band(nameDeclP.band(shieldPropP.many())).then(function (p) return StandardShield(Some(p.b.a), p.a.a, p.a.b, p.b.b)),
+		standardT._and(armorClassP.option().band(sizeClassP.and_(shieldT))).band(nameDeclP.band(shieldPropP.many())).then(function (p) return AST_StandardShield(Some(p.b.a), p.a.a, p.a.b, p.b.b)),
+		activeT  ._and(armorClassP.option().band(sizeClassP.and_(shieldT))).band(nameDeclP.band(shieldPropP.many())).then(function (p) return AST_ActiveShield  (Some(p.b.a), p.a.a, p.a.b, p.b.b)),
+		reactiveT._and(armorClassP.option().band(sizeClassP.and_(shieldT))).band(nameDeclP.band(shieldPropP.many())).then(function (p) return AST_ReactiveShield(Some(p.b.a), p.a.a, p.a.b, p.b.b)),
+		               armorClassP.option().band(sizeClassP.and_(shieldT)) .band(nameDeclP.band(shieldPropP.many())).then(function (p) return AST_StandardShield(Some(p.b.a), p.a.a, p.a.b, p.b.b)),
 	].ors().lazyF();
 
 	static var shieldNoNameDefP = [
