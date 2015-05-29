@@ -29,8 +29,7 @@ class MekParser {
 						trace ('cannot parse ' + remaining);
 					}
 					// withResult(res);
-					Resolver.resolve(ast);
-					// trace (MekPrinter.printSystems(ast.systems));
+					trace (MekPrinter.printMektons(Resolver.resolve(ast)));
 				case Failure(err, rest, _):
 					var p = rest.textAround();
 					output(p.text);
