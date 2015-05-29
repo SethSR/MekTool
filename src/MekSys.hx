@@ -23,10 +23,10 @@ enum MekSys {
 	Hand (system: Option<MekSys>, properties: Array<Property>);
 
 	/** Mated Systems **/
-	MatedSystem(name: String, systems: List<MekSys>, properties: Array<Property>);
+	MatedSystem(name: String, systems: Array<MekSys>, properties: Array<Property>);
 
 	/** Reflector Systems **/
-	Reflector(name: String, quality: Int, properties: Array<Property>);
+	Reflector(name: String, properties: Array<Property>);
 
 	/** Remote Control Systems **/
 	RemoteControl(name: String, sizeClass: SizeClass, properties: Array<Property>);
