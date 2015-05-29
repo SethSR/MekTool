@@ -1,7 +1,6 @@
 using com.mindrocks.functional.Functional;
 
 using Armor;
-using AST;
 
 class MekPrinter {
 	static public function printSystems(systems: Array<AST_MekSys>) {
