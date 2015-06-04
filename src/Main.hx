@@ -9,7 +9,7 @@ class Main extends snow.App {
 
     override function ready() {
     	var test = new haxe.unit.TestRunner();
-    	test.add(new MekParser.MekTest());
+    	test.add(new PropertyTest());
     	test.run();
     	MekParser.test("Mekton : 'RX-78-2 Gundam'
 	Striker Torso = (6,6,6)
