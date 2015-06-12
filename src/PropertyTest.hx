@@ -78,24 +78,18 @@ class PropertyTest extends haxe.unit.TestCase {
 
 	public function testProjAmmoPropP() {
 		switch (MekParser.projAmmoPropP()('Ammo'.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(a,_): switch (a) {
-				case Resolved  (p): switch (p) {
-					case AST_Ammo(list): assertEquals(list.length, 0);
-					case _             : assertTrue(false);
-				}
-				case Unresolved(s): assertTrue(false);
-			}
+			case Success(Resolved(AST_Ammo(list)),_): assertEquals(list.length, 0);
+			case Success(Resolved(_),_)             : assertTrue(false);
+			case Success(Unresolved(s),_)           : assertTrue(false);
+			case Failure(_,_)                       : assertTrue(false);
 		}
 	}
 
 	function propertyTest(str: String, parser: Parser<String, AST<AST_Property>>, prop: AST_Property) {
 		switch (parser(str.reader())) {
-			case Failure(_,_): assertTrue(false);
-			case Success(a,_): switch (a) {
-				case Resolved  (p): assertEquals(p, prop);
-				case Unresolved(s): assertTrue(false);
-			}
+			case Success(Resolved(p),_)  : assertEquals(p, prop);
+			case Success(Unresolved(s),_): assertTrue(false);
+			case Failure(_,_)            : assertTrue(false);
 		}
 	}
 }
