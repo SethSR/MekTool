@@ -19,132 +19,125 @@ class Resolver {
 	}
 
 	static function resolveServo(servo: AST_Servo): Servo switch servo {
-		case AST_Torso(sizeClass, armor, systems): return Torso(sizeClass, armor, [for (s in systems) resolveASTSystem(s)]);
-		case AST_Head (sizeClass, armor, systems): return Head (sizeClass, armor, [for (s in systems) resolveASTSystem(s)]);
-		case AST_Arm  (sizeClass, armor, systems): return Arm  (sizeClass, armor, [for (s in systems) resolveASTSystem(s)]);
-		case AST_Leg  (sizeClass, armor, systems): return Leg  (sizeClass, armor, [for (s in systems) resolveASTSystem(s)]);
-		case AST_Wing (sizeClass, armor, systems): return Wing (sizeClass, armor, [for (s in systems) resolveASTSystem(s)]);
-		case AST_Tail (sizeClass, armor, systems): return Tail (sizeClass, armor, [for (s in systems) resolveASTSystem(s)]);
-		case AST_Pod  (sizeClass, armor, systems): return Pod  (sizeClass, armor, [for (s in systems) resolveASTSystem(s)]);
+		case AST_Torso(sizeClass, armor, systems): return Torso(sizeClass, armor, [for (s in systems) resolveASTSystems(s)]);
+		case AST_Head (sizeClass, armor, systems): return Head (sizeClass, armor, [for (s in systems) resolveASTSystems(s)]);
+		case AST_Arm  (sizeClass, armor, systems): return Arm  (sizeClass, armor, [for (s in systems) resolveASTSystems(s)]);
+		case AST_Leg  (sizeClass, armor, systems): return Leg  (sizeClass, armor, [for (s in systems) resolveASTSystems(s)]);
+		case AST_Wing (sizeClass, armor, systems): return Wing (sizeClass, armor, [for (s in systems) resolveASTSystems(s)]);
+		case AST_Tail (sizeClass, armor, systems): return Tail (sizeClass, armor, [for (s in systems) resolveASTSystems(s)]);
+		case AST_Pod  (sizeClass, armor, systems): return Pod  (sizeClass, armor, [for (s in systems) resolveASTSystems(s)]);
 	}
 
-	static function resolveASTSystem(ast_system: AST<AST_MekSys>): MekSys switch ast_system {
+	static function resolveASTSystem(name: String): MekSys {
+		for (s in storage.systems) switch s {
+			case AST_Reflector  (n, properties): if (name == n) return Reflector  (n, [for (p in properties) resolveASTProperty(p)]);
+			case AST_Ammo       (n, properties): if (name == n) return Ammo       (n, [for (p in properties) resolveASTProperty(p)]);
+			case AST_SensorECM  (n, properties): if (name == n) return SensorECM  (n, [for (p in properties) resolveASTProperty(p)]);
+			case AST_MissileECM (n, properties): if (name == n) return MissileECM (n, [for (p in properties) resolveASTProperty(p)]);
+			case AST_RadarECM   (n, properties): if (name == n) return RadarECM   (n, [for (p in properties) resolveASTProperty(p)]);
+			case AST_CounterECM (n, properties): if (name == n) return CounterECM (n, [for (p in properties) resolveASTProperty(p)]);
+			case AST_Beam       (n, properties): if (name == n) return Beam       (n, [for (p in properties) resolveASTProperty(p)]);
+			case AST_EnergyMelee(n, properties): if (name == n) return EnergyMelee(n, [for (p in properties) resolveASTProperty(p)]);
+			case AST_Melee      (n, properties): if (name == n) return Melee      (n, [for (p in properties) resolveASTProperty(p)]);
+			case AST_Missile    (n, properties): if (name == n) return Missile    (n, [for (p in properties) resolveASTProperty(p)]);
+			case AST_Projectile (n, properties): if (name == n) return Projectile (n, [for (p in properties) resolveASTProperty(p)]);
+
+			case AST_StandardShield(Some(n), armor, sizeClass, properties): if (name == n) return StandardShield(Some(n), armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
+			case AST_ActiveShield  (Some(n), armor, sizeClass, properties): if (name == n) return ActiveShield  (Some(n), armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
+			case AST_ReactiveShield(Some(n), armor, sizeClass, properties): if (name == n) return ReactiveShield(Some(n), armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
+
+			case AST_StandardShield(None, armor, sizeClass, properties): return StandardShield(None, armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
+			case AST_ActiveShield  (None, armor, sizeClass, properties): return ActiveShield  (None, armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
+			case AST_ReactiveShield(None, armor, sizeClass, properties): return ReactiveShield(None, armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
+
+			case AST_RemoteControl(n, sizeClass, properties): if (name == n) return RemoteControl(n, sizeClass, [for (p in properties) resolveASTProperty(p)]);
+			case AST_Sensor       (n, sizeClass, properties): if (name == n) return Sensor       (n, sizeClass, [for (p in properties) resolveASTProperty(p)]);
+
+			case AST_EnergyPool (n, properties, systems): if (name == n)
+				return EnergyPool(name,
+					[for (p in properties) resolveASTProperty(p)],
+					[for (s in systems) resolveASTSystems(s)]);
+			case AST_MatedSystem(n, systems, properties): if (name == n)
+				return MatedSystem(name,
+					[for (s in systems) resolveASTSystems(s)],
+					[for (p in properties) resolveASTProperty(p)]);
+			case _: // Do Nothing
+		}
+		throw 'System not found: $name';
+	}
+
+	static function resolveASTSystems(ast_system: AST<AST_MekSys>): MekSys switch ast_system {
 		case Resolved(system): return resolveSystem(system);
-		case Unresolved(n):
-			for (s in storage.systems) switch s {
-				case AST_Reflector  (name, properties): if (name == n) return Reflector(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_Ammo       (name, properties): if (name == n) return Ammo(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_SensorECM  (name, properties): if (name == n) return SensorECM(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_MissileECM (name, properties): if (name == n) return MissileECM(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_RadarECM   (name, properties): if (name == n) return RadarECM(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_CounterECM (name, properties): if (name == n) return CounterECM(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_Beam       (name, properties): if (name == n) return Beam(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_EnergyMelee(name, properties): if (name == n) return EnergyMelee(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_Melee      (name, properties): if (name == n) return Melee(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_Missile    (name, properties): if (name == n) return Missile(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_Projectile (name, properties): if (name == n) return Projectile(name, [for (p in properties) resolveASTProperty(p)]);
-				case AST_EnergyPool (name, properties, systems):
-					if (name == n) return EnergyPool(
-						name,
-						[for (p in properties) resolveASTProperty(p)],
-						[for (s in systems) resolveASTSystem(s)]);
-
-				case AST_StandardShield(name, armor, sizeClass, properties):
-					switch (name) {
-						case Some(sn): if (sn == n) return StandardShield(name, armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
-						case None: // Do Nothing
-					}
-				case AST_ActiveShield  (name, armor, sizeClass, properties):
-					switch (name) {
-						case Some(sn): if (sn == n) return ActiveShield(name, armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
-						case None: // Do Nothing
-					}
-				case AST_ReactiveShield(name, armor, sizeClass, properties):
-					switch (name) {
-						case Some(sn): if (sn == n) return ReactiveShield(name, armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
-						case None: // Do Nothing
-					}
-
-				case AST_MatedSystem(name, systems, properties):
-					if (name == n) return MatedSystem(
-						name,
-						[for (s in systems) resolveASTSystem(s)],
-						[for (p in properties) resolveASTProperty(p)]);
-
-				case AST_RemoteControl(name, sizeClass, properties): if (name == n) return RemoteControl(name, sizeClass, [for (p in properties) resolveASTProperty(p)]);
-				case AST_Sensor       (name, sizeClass, properties): if (name == n) return Sensor(name, sizeClass, [for (p in properties) resolveASTProperty(p)]);
-				case _: // Do Nothing
-			}
-			return null;
+		case Unresolved(n):    return resolveASTSystem(n);
 	}
 
 	static function resolveSystem(system: AST_MekSys): MekSys switch system {
-		case AST_Reflector  (name, properties): return Reflector(name, [for (p in properties) resolveASTProperty(p)]);
-		case AST_Ammo       (name, properties): return Ammo(name, [for (p in properties) resolveASTProperty(p)]);
-		case AST_SensorECM  (name, properties): return SensorECM(name, [for (p in properties) resolveASTProperty(p)]);
-		case AST_MissileECM (name, properties): return MissileECM(name, [for (p in properties) resolveASTProperty(p)]);
-		case AST_RadarECM   (name, properties): return RadarECM(name, [for (p in properties) resolveASTProperty(p)]);
-		case AST_CounterECM (name, properties): return CounterECM(name, [for (p in properties) resolveASTProperty(p)]);
-		case AST_Beam       (name, properties): return Beam(name, [for (p in properties) resolveASTProperty(p)]);
+		case AST_Reflector  (name, properties): return Reflector  (name, [for (p in properties) resolveASTProperty(p)]);
+		case AST_Ammo       (name, properties): return Ammo       (name, [for (p in properties) resolveASTProperty(p)]);
+		case AST_SensorECM  (name, properties): return SensorECM  (name, [for (p in properties) resolveASTProperty(p)]);
+		case AST_MissileECM (name, properties): return MissileECM (name, [for (p in properties) resolveASTProperty(p)]);
+		case AST_RadarECM   (name, properties): return RadarECM   (name, [for (p in properties) resolveASTProperty(p)]);
+		case AST_CounterECM (name, properties): return CounterECM (name, [for (p in properties) resolveASTProperty(p)]);
+		case AST_Beam       (name, properties): return Beam       (name, [for (p in properties) resolveASTProperty(p)]);
 		case AST_EnergyMelee(name, properties): return EnergyMelee(name, [for (p in properties) resolveASTProperty(p)]);
-		case AST_Melee      (name, properties): return Melee(name, [for (p in properties) resolveASTProperty(p)]);
-		case AST_Missile    (name, properties): return Missile(name, [for (p in properties) resolveASTProperty(p)]);
-		case AST_Projectile (name, properties): return Projectile(name, [for (p in properties) resolveASTProperty(p)]);
+		case AST_Melee      (name, properties): return Melee      (name, [for (p in properties) resolveASTProperty(p)]);
+		case AST_Missile    (name, properties): return Missile    (name, [for (p in properties) resolveASTProperty(p)]);
+		case AST_Projectile (name, properties): return Projectile (name, [for (p in properties) resolveASTProperty(p)]);
 		case AST_EnergyPool (name, properties, systems):
 			return EnergyPool(
 				name,
 				[for (p in properties) resolveASTProperty(p)],
-				[for (s in systems) resolveASTSystem(s)]);
+				[for (s in systems) resolveASTSystems(s)]);
 
 		case AST_StandardShield(name, armor, sizeClass, properties): return StandardShield(name, armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
 		case AST_ActiveShield  (name, armor, sizeClass, properties): return ActiveShield(name, armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
 		case AST_ReactiveShield(name, armor, sizeClass, properties): return ReactiveShield(name, armor, sizeClass, [for (p in properties) resolveASTProperty(p)]);
 
 		case AST_Mount(system, properties):
-			var sys = resolveASTSystem(system);
+			var sys = resolveASTSystems(system);
 			return Mount(sys != null ? Some(sys) : None, [for (p in properties) resolveASTProperty(p)]);
 		case AST_Hand (system, properties):
-			var sys = resolveASTSystem(system);
+			var sys = resolveASTSystems(system);
 			return Hand(sys != null ? Some(sys) : None, [for (p in properties) resolveASTProperty(p)]);
 
 		case AST_MatedSystem(name, systems, properties):
 			return MatedSystem(
 				name,
-				[for (s in systems) resolveASTSystem(s)],
+				[for (s in systems) resolveASTSystems(s)],
 				[for (p in properties) resolveASTProperty(p)]);
 
 		case AST_RemoteControl(name, sizeClass, properties): return RemoteControl(name, sizeClass, [for (p in properties) resolveASTProperty(p)]);
-		case AST_Sensor       (name, sizeClass, properties): return Sensor(name, sizeClass, [for (p in properties) resolveASTProperty(p)]);
+		case AST_Sensor       (name, sizeClass, properties): return Sensor       (name, sizeClass, [for (p in properties) resolveASTProperty(p)]);
 
-		case AST_Stereo                (properties): return Stereo([for (p in properties) resolveASTProperty(p)]);
-		case AST_Liftwire              (properties): return Liftwire([for (p in properties) resolveASTProperty(p)]);
-		case AST_AntiTheftCodeLock     (properties): return AntiTheftCodeLock([for (p in properties) resolveASTProperty(p)]);
-		case AST_Spotlights            (properties): return Spotlights([for (p in properties) resolveASTProperty(p)]);
-		case AST_Nightlights           (properties): return Nightlights([for (p in properties) resolveASTProperty(p)]);
-		case AST_StorageModule         (properties): return StorageModule([for (p in properties) resolveASTProperty(p)]);
-		case AST_Micromanipulators     (properties): return Micromanipulators([for (p in properties) resolveASTProperty(p)]);
-		case AST_SlickSpray            (properties): return SlickSpray([for (p in properties) resolveASTProperty(p)]);
-		case AST_BoggSpray             (properties): return BoggSpray([for (p in properties) resolveASTProperty(p)]);
-		case AST_DamageControlPackage  (properties): return DamageControlPackage([for (p in properties) resolveASTProperty(p)]);
-		case AST_QuickChangeMount      (properties): return QuickChangeMount([for (p in properties) resolveASTProperty(p)]);
-		case AST_SilentRunning         (properties): return SilentRunning([for (p in properties) resolveASTProperty(p)]);
-		case AST_Parachute             (properties): return Parachute([for (p in properties) resolveASTProperty(p)]);
-		case AST_ReEntryPackage        (properties): return ReEntryPackage([for (p in properties) resolveASTProperty(p)]);
-		case AST_EjectionSeat          (properties): return EjectionSeat([for (p in properties) resolveASTProperty(p)]);
-		case AST_EscapePod             (properties): return EscapePod([for (p in properties) resolveASTProperty(p)]);
-		case AST_ManeuverPod           (properties): return ManeuverPod([for (p in properties) resolveASTProperty(p)]);
-		case AST_VehiclePod            (properties): return VehiclePod([for (p in properties) resolveASTProperty(p)]);
-		case AST_Cockpit               (properties): return Cockpit([for (p in properties) resolveASTProperty(p)]);
-		case AST_Passenger             (properties): return Passenger([for (p in properties) resolveASTProperty(p)]);
-		case AST_ExtraCrew             (properties): return ExtraCrew([for (p in properties) resolveASTProperty(p)]);
-		case AST_AdvancedSensorPackage (properties): return AdvancedSensorPackage([for (p in properties) resolveASTProperty(p)]);
-		case AST_RadioRadarAnalyzer    (properties): return RadioRadarAnalyzer([for (p in properties) resolveASTProperty(p)]);
+		case AST_Stereo                (properties): return Stereo                ([for (p in properties) resolveASTProperty(p)]);
+		case AST_Liftwire              (properties): return Liftwire              ([for (p in properties) resolveASTProperty(p)]);
+		case AST_AntiTheftCodeLock     (properties): return AntiTheftCodeLock     ([for (p in properties) resolveASTProperty(p)]);
+		case AST_Spotlights            (properties): return Spotlights            ([for (p in properties) resolveASTProperty(p)]);
+		case AST_Nightlights           (properties): return Nightlights           ([for (p in properties) resolveASTProperty(p)]);
+		case AST_StorageModule         (properties): return StorageModule         ([for (p in properties) resolveASTProperty(p)]);
+		case AST_Micromanipulators     (properties): return Micromanipulators     ([for (p in properties) resolveASTProperty(p)]);
+		case AST_SlickSpray            (properties): return SlickSpray            ([for (p in properties) resolveASTProperty(p)]);
+		case AST_BoggSpray             (properties): return BoggSpray             ([for (p in properties) resolveASTProperty(p)]);
+		case AST_DamageControlPackage  (properties): return DamageControlPackage  ([for (p in properties) resolveASTProperty(p)]);
+		case AST_QuickChangeMount      (properties): return QuickChangeMount      ([for (p in properties) resolveASTProperty(p)]);
+		case AST_SilentRunning         (properties): return SilentRunning         ([for (p in properties) resolveASTProperty(p)]);
+		case AST_Parachute             (properties): return Parachute             ([for (p in properties) resolveASTProperty(p)]);
+		case AST_ReEntryPackage        (properties): return ReEntryPackage        ([for (p in properties) resolveASTProperty(p)]);
+		case AST_EjectionSeat          (properties): return EjectionSeat          ([for (p in properties) resolveASTProperty(p)]);
+		case AST_EscapePod             (properties): return EscapePod             ([for (p in properties) resolveASTProperty(p)]);
+		case AST_ManeuverPod           (properties): return ManeuverPod           ([for (p in properties) resolveASTProperty(p)]);
+		case AST_VehiclePod            (properties): return VehiclePod            ([for (p in properties) resolveASTProperty(p)]);
+		case AST_Cockpit               (properties): return Cockpit               ([for (p in properties) resolveASTProperty(p)]);
+		case AST_Passenger             (properties): return Passenger             ([for (p in properties) resolveASTProperty(p)]);
+		case AST_ExtraCrew             (properties): return ExtraCrew             ([for (p in properties) resolveASTProperty(p)]);
+		case AST_AdvancedSensorPackage (properties): return AdvancedSensorPackage ([for (p in properties) resolveASTProperty(p)]);
+		case AST_RadioRadarAnalyzer    (properties): return RadioRadarAnalyzer    ([for (p in properties) resolveASTProperty(p)]);
 		case AST_ResolutionIntensifiers(properties): return ResolutionIntensifiers([for (p in properties) resolveASTProperty(p)]);
-		case AST_SpottingRadar         (properties): return SpottingRadar([for (p in properties) resolveASTProperty(p)]);
-		case AST_TargetAnalyzer        (properties): return TargetAnalyzer([for (p in properties) resolveASTProperty(p)]);
-		case AST_MarineSuite           (properties): return MarineSuite([for (p in properties) resolveASTProperty(p)]);
-		case AST_GravityLens           (properties): return GravityLens([for (p in properties) resolveASTProperty(p)]);
-		case AST_MagneticResonance     (properties): return MagneticResonance([for (p in properties) resolveASTProperty(p)]);
+		case AST_SpottingRadar         (properties): return SpottingRadar         ([for (p in properties) resolveASTProperty(p)]);
+		case AST_TargetAnalyzer        (properties): return TargetAnalyzer        ([for (p in properties) resolveASTProperty(p)]);
+		case AST_MarineSuite           (properties): return MarineSuite           ([for (p in properties) resolveASTProperty(p)]);
+		case AST_GravityLens           (properties): return GravityLens           ([for (p in properties) resolveASTProperty(p)]);
+		case AST_MagneticResonance     (properties): return MagneticResonance     ([for (p in properties) resolveASTProperty(p)]);
 	}
 
 	static function resolveASTProperty(ast_property: AST<AST_Property>): Property switch ast_property {
@@ -233,7 +226,6 @@ class Resolver {
 			case AST_Ammo(name, properties): if (name == ammo) return Ammo(name, [for (p in properties) resolveASTProperty(p)]);
 			case _: // This is an error
 		}
-		return null;
-		// throw 'Ammo "' + ammo + '" not found';
+		throw 'Ammo not found: $ammo';
 	}
 }
