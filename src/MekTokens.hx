@@ -111,6 +111,7 @@ class MekTokens {
 	static public var lightweightT       = withSpacing('Lightweight'.identifier());
 	static public var lockT              = withSpacing('Lock'.identifier());
 	static public var longT              = withSpacing('Long'.identifier());
+	static public var maT                = withSpacing('MA'.identifier());
 	static public var magneticT          = withSpacing('Magnetic'.identifier());
 	static public var maneuverT          = withSpacing('Maneuver'.identifier());
 	static public var marineT            = withSpacing('Marine'.identifier());
@@ -191,6 +192,7 @@ class MekTokens {
 	static public var tanglerT           = withSpacing('Tangler'.identifier());
 	static public var targetT            = withSpacing('Target'.identifier());
 	static public var thrownT            = withSpacing('Thrown'.identifier());
+	static public var thrustersT         = withSpacing('Thrusters'.identifier());
 	static public var torsoT             = withSpacing('Torso'.identifier());
 	static public var tracerT            = withSpacing('Tracer'.identifier());
 	static public var turnsT             = withSpacing('Turns'.identifier());
