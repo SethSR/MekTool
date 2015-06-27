@@ -16,44 +16,33 @@ using SizeClass;
 
 @:allow(MekTest)
 class MekParser {
-	static function tryParse<T>(str: String, parser: Parser<String, T>, withResult: T -> Void, output: String -> Void) {
+	static public function tryParse(str: String, output: String -> Void): String {
 		try {
-			var res = Timer.measure(function () return parser(str.reader()));
+			// var res = Timer.measure(function () return fileP()(str.reader()));
+			var res = fileP()(str.reader());
 
 			switch (res) {
 				case Success(res, rest):
 					var remaining = rest.rest();
-					if (StringTools.trim(remaining).length == 0) {
+					if (StringTools.trim(remaining).length == 0)
 						trace ('success!');
-					} else {
-						trace ('cannot parse ' + remaining);
-					}
-					// withResult(res);
-					trace (MekPrinter.printMektons(Resolver.resolve(ast)));
+					else
+						trace ('cannot parse $remaining');
+					return MekPrinter.printMektons(Resolver.resolve(ast));
 				case Failure(err, rest, _):
 					var p = rest.textAround();
 					output(p.text);
 					output(p.indicator);
-					err.map(function (error) {
-						output('Error at ' + error.pos + ' : ' + error.msg);
-					});
+					err.map(function (error) output('Error at ${error.pos} : ${error.msg}'));
+					return 'failure';
 			}
 		} catch (e: Dynamic) {
-			trace ('Error ' + Std.string(e));
+			return 'Error ${Std.string(e)}';
 		}
 	}
 
-	static public function test(str: String) {
-		function toOutput(str: String) {
-			trace (StringTools.replace(str, ' ', '_'));
-		}
-
-		tryParse(
-			str,
-			fileP(),
-			function (res) trace ('Parsed ' + Std.string(res)),
-			toOutput
-		);
+	static public function test(str: String): String {
+		return tryParse(str, function (str: String) trace (str));
 	}
 
 	static var ast = {
@@ -68,11 +57,17 @@ class MekParser {
 	static var fileP = spacingP._and(definitionP.many()).commit().lazyF();
 
 	static var definitionP = [
-		mektonDefP.then(function (p) ast.mektons.push(AST_Mekton(p.a, p.b))),
+		mektonDefP.then(function (p) ast.mektons.push(AST_Mekton(p.a, p.b.b, p.b.a))),
 		systemDefP.then(function (p) ast.systems.push(p)),
 	].ors().lazyF();
 
-	static var mektonDefP = mektonT._and(nameDeclP).band(servoP.many()).tag('Mekton').lazyF();
+	static var mektonDefP = mektonT._and(nameDeclP).band(propulsionP.many().band(servoP.many())).commit().tag('Mekton').lazyF();
+
+	static var propulsionP = [
+		thrustersP
+	].ors().commit().tag('Propulsion').lazyF();
+
+	static var thrustersP = numberP.and_(maT._and(thrustersT)).then(function (p) return Propulsion.Thruster(Std.parseInt(p))).lazyF();
 
 	static var servoP = [
 		sizeClassP.band(torsoT._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Torso(p.a, p.b.a, p.b.b)),
@@ -82,7 +77,7 @@ class MekParser {
 		sizeClassP.band(tailT ._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Tail (p.a, p.b.a, p.b.b)),
 		sizeClassP.band(wingT ._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Wing (p.a, p.b.a, p.b.b)),
 		sizeClassP.band(podT  ._and(armorP.band(systemDeclP.many()))).then(function (p) return AST_Pod  (p.a, p.b.a, p.b.b)),
-	].ors().tag('Servo').lazyF();
+	].ors().commit().tag('Servo').lazyF();
 
 	static var sizeClassP = [
 		superlightT           .then(function (p) return Superlight   ),
@@ -274,12 +269,6 @@ class MekParser {
 		standardT.option().band(armorClassP.option().band(sizeClassP.and_(shieldT))).band(shieldPropP.many()).then(function (p) trace ('Parsing a shield definition')),
 		activeT  .option().band(armorClassP.option().band(sizeClassP.and_(shieldT))).band(shieldPropP.many()).then(function (p) trace ('Parsing a shield definition')),
 		reactiveT.option().band(armorClassP.option().band(sizeClassP.and_(shieldT))).band(shieldPropP.many()).then(function (p) trace ('Parsing a shield definition')),
-	].ors().lazyF();
-
-	static var shieldTypeP = [
-		standardT,
-		activeT,
-		reactiveT,
 	].ors().lazyF();
 
 
