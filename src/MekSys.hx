@@ -1,7 +1,7 @@
 import com.mindrocks.functional.Functional.Option;
 
 enum Mekton {
-	Mekton(name: String, servos: Array<Servo>);
+	Mekton(name: String, servos: Array<Servo>, propulsion: Array<Propulsion>);
 }
 
 enum MekSys {
