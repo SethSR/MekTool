@@ -7,8 +7,9 @@ class MekPrinter {
 	static public function printMektons(mektons: Array<Mekton>) {
 		var str = new StringBuf();
 		for (m in mektons) switch m {
-			case Mekton(name, servos):
+			case Mekton(name, servos, propulsion):
 				str.add('\nMekton : \'$name\'');
+				str.add(propulsion);
 				str.add(printServos(servos));
 		}
 		return str.toString();
