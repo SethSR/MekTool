@@ -6,7 +6,7 @@ enum AST<T> {
 }
 
 enum AST_Mekton {
-	AST_Mekton(name: String, servos: Array<AST_Servo>);
+	AST_Mekton(name: String, servos: Array<AST_Servo>, propulsion: Array<Propulsion>);
 }
 
 enum AST_Servo {
