@@ -13,7 +13,7 @@ class Resolver {
 		storage = ast;
 		var mektons = new Array<Mekton>();
 		for (m in storage.mektons) switch m {
-			case AST_Mekton(name, servos): mektons.push(Mekton(name, [for (s in servos) resolveServo(s)]));
+			case AST_Mekton(name, servos, propulsion): mektons.push(Mekton(name, [for (s in servos) resolveServo(s)], propulsion));
 		}
 		return mektons;
 	}
